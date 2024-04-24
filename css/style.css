@@ -2181,6 +2181,9 @@ s {
   display: inline-block;
   margin: 0 10px;
 }
+p {
+  text-indent: 0 !important;
+}
 @media (max-width: 768px) and (prefers-color-scheme: light) {
   .menubar-head {
     background-color: #fff;

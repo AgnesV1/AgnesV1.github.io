@@ -282,3 +282,6 @@ s {
   display: inline-block;
   margin: 0 10px;
 }
+p {
+  text-indent: 0 !important;
+}
