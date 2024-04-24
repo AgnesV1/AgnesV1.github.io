@@ -21,11 +21,6 @@ img {
   display: inline-block;
   vertical-align: middle;
 }
-@media (prefers-color-scheme: dark) {
-  img {
-    filter: brightness(0.8);
-  }
-}
 del,
 s {
   text-decoration: line-through;
@@ -180,8 +175,12 @@ s {
 .article-tag-list-item:last-of-type {
   margin-right: auto;
 }
+.article-entry p {
+  font-size: 16px;
+  line-height: 2em;
+}
 .article-entry li {
-  font-size: 20px;
+  font-size: 16px;
   line-height: 2rem;
 }
 .article-entry ul {
@@ -281,7 +280,4 @@ s {
 .post-meta .post-visit {
   display: inline-block;
   margin: 0 10px;
-}
-p {
-  text-indent: 0 !important;
 }
