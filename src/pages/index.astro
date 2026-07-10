@@ -1,0 +1,231 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Header from '../components/Header.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+
+const posts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="hero">
+				<h1>你好，我是 Agnes <span class="wave">👋</span></h1>
+				<p class="intro">
+					在这里写<mark class="m-coral">代码</mark>、记<mark class="m-mint">生活</mark
+					>，偶尔聊聊<mark class="m-lav">视频</mark>。
+					<span class="en">Notes on code, life & everything in between.</span>
+				</p>
+			</section>
+
+			<section class="posts">
+				<div class="filter" role="group" aria-label="按语言筛选文章">
+					<button class="pill active" data-filter="all">全部</button>
+					<button class="pill" data-filter="zh">中文</button>
+					<button class="pill" data-filter="en">EN</button>
+				</div>
+
+				<ul class="post-list">
+					{
+						posts.map((post, i) => (
+							<li class={`c${i % 5}`} data-lang={post.data.lang}>
+								<a href={`/blog/${post.id}/`}>
+									<span class="date">
+										<FormattedDate date={post.data.pubDate} />
+									</span>
+									<span class="body">
+										<span class="post-title">{post.data.title}</span>
+										{post.data.tags.length > 0 && (
+											<span class="tags">
+												{post.data.tags.map((tag) => (
+													<span class="tag">#{tag}</span>
+												))}
+											</span>
+										)}
+									</span>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</section>
+		</main>
+		<Footer />
+
+		<script>
+			const pills = document.querySelectorAll<HTMLButtonElement>('.filter .pill');
+			const items = document.querySelectorAll<HTMLLIElement>('.post-list li');
+			pills.forEach((pill) => {
+				pill.addEventListener('click', () => {
+					pills.forEach((p) => p.classList.toggle('active', p === pill));
+					const filter = pill.dataset.filter;
+					items.forEach((li) => {
+						li.style.display = filter === 'all' || li.dataset.lang === filter ? '' : 'none';
+					});
+				});
+			});
+		</script>
+	</body>
+</html>
+
+<style>
+	.hero {
+		margin: 2.5rem 0 3rem;
+	}
+	.hero h1 {
+		font-size: 2rem;
+		letter-spacing: -0.02em;
+		margin: 0 0 0.8rem;
+	}
+	.wave {
+		display: inline-block;
+	}
+	.intro {
+		font-size: 1.05rem;
+		color: var(--tx);
+		line-height: 2;
+		margin: 0;
+	}
+	.intro .en {
+		display: block;
+		color: var(--tx-2);
+		font-size: 0.95rem;
+		margin-top: 0.3rem;
+	}
+	mark {
+		background: none;
+		color: inherit;
+		padding: 0 0.1em;
+		background-image: linear-gradient(transparent 62%, var(--mark) 62%);
+	}
+	.m-coral {
+		--mark: color-mix(in srgb, var(--coral) 30%, transparent);
+	}
+	.m-mint {
+		--mark: color-mix(in srgb, var(--mint) 32%, transparent);
+	}
+	.m-lav {
+		--mark: color-mix(in srgb, var(--lav) 30%, transparent);
+	}
+
+	.filter {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 1.8rem;
+	}
+	.pill {
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		padding: 0.32rem 0.9rem;
+		border-radius: 999px;
+		border: 1px solid var(--line);
+		background: none;
+		color: var(--tx-2);
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+	.pill:hover {
+		border-color: var(--sky);
+		color: var(--sky);
+	}
+	.pill.active {
+		border-color: var(--coral);
+		color: var(--coral);
+		background: color-mix(in srgb, var(--coral) 10%, transparent);
+		font-weight: 700;
+	}
+
+	.post-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.post-list li {
+		margin: 0;
+	}
+	.post-list li.c0 {
+		--c: var(--coral);
+	}
+	.post-list li.c1 {
+		--c: var(--mint);
+	}
+	.post-list li.c2 {
+		--c: var(--lav);
+	}
+	.post-list li.c3 {
+		--c: var(--sun);
+	}
+	.post-list li.c4 {
+		--c: var(--sky);
+	}
+	.post-list a {
+		display: grid;
+		grid-template-columns: 6.5rem 1fr;
+		gap: 1.2rem;
+		align-items: baseline;
+		padding: 1.05rem 0.4rem;
+		text-decoration: none;
+		border-radius: 10px;
+		border-bottom: 1px solid var(--line);
+		transition: background 0.2s ease;
+	}
+	.post-list li:last-child a {
+		border-bottom: none;
+	}
+	.post-list a:hover {
+		background: color-mix(in srgb, var(--c) 7%, transparent);
+	}
+	.date {
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		color: var(--tx-2);
+		white-space: nowrap;
+	}
+	.body {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.3rem 0.7rem;
+	}
+	.post-title {
+		font-weight: 600;
+		font-size: 1.08rem;
+		color: var(--tx);
+		background-image: linear-gradient(var(--c), var(--c));
+		background-repeat: no-repeat;
+		background-size: 0% 2px;
+		background-position: 0 100%;
+		padding-bottom: 2px;
+		transition: background-size 0.25s ease;
+	}
+	.post-list a:hover .post-title {
+		background-size: 100% 2px;
+	}
+	.tags {
+		display: inline-flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+	}
+	.tag {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		color: var(--c);
+	}
+
+	@media (max-width: 560px) {
+		.post-list a {
+			grid-template-columns: 1fr;
+			gap: 0.25rem;
+		}
+	}
+</style>

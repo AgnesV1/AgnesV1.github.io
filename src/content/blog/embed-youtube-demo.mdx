@@ -1,0 +1,27 @@
+---
+title: '在文章里嵌入 YouTube 视频'
+description: '一行组件，把视频放进博客——为将来的频道内容做准备。'
+pubDate: 2026-07-08
+lang: zh
+tags: ['指南']
+---
+
+import { YouTube } from '@astro-community/astro-embed-youtube';
+
+这个博客已经配好了 YouTube 嵌入支持。像下面这样，在文章里放一个视频只需要一行：
+
+<YouTube id="jfKfPfyJRdk" />
+
+## 怎么用
+
+1. 把文章的后缀名从 `.md` 改成 `.mdx`
+2. 在正文开头加一行 `import { YouTube } from '@astro-community/astro-embed-youtube';`
+3. 在想放视频的地方写 `<YouTube id="视频ID" />`
+
+视频 ID 就是 YouTube 链接里 `v=` 后面那串字符。比如 `https://www.youtube.com/watch?v=jfKfPfyJRdk` 的 ID 是 `jfKfPfyJRdk`。
+
+> 这个嵌入组件只在点击播放时才加载 YouTube 的资源，所以页面依然很快。
+
+## 将来的计划
+
+等频道开起来，可以在 `src/consts.ts` 里填上 `YOUTUBE_URL`，页头就会自动出现 YouTube 图标；再进一步，还可以加一个「视频」页面，自动同步频道里的最新视频。

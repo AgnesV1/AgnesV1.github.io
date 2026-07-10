@@ -1,0 +1,92 @@
+---
+import { GITHUB_URL, SITE_TITLE, YOUTUBE_URL } from '../consts';
+import HeaderLink from './HeaderLink.astro';
+import ThemeToggle from './ThemeToggle.astro';
+---
+
+<header>
+	<nav>
+		<a class="logo" href="/">{SITE_TITLE}<span class="dot">.</span></a>
+		<div class="links">
+			<HeaderLink href="/">文章</HeaderLink>
+			<HeaderLink href="/about">关于</HeaderLink>
+		</div>
+		<div class="icons">
+			{
+				YOUTUBE_URL && (
+					<a href={YOUTUBE_URL} target="_blank" class="icon yt">
+						<span class="sr-only">YouTube 频道</span>
+						<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+							<path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.3 31.3 0 0 0 0 12c0 1.9.2 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1c.3-1.9.5-3.9.5-5.8s-.2-3.9-.5-5.8ZM9.6 15.6V8.4L15.8 12l-6.2 3.6Z" />
+						</svg>
+					</a>
+				)
+			}
+			{
+				GITHUB_URL && (
+					<a href={GITHUB_URL} target="_blank" class="icon gh">
+						<span class="sr-only">GitHub 主页</span>
+						<svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true">
+							<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+						</svg>
+					</a>
+				)
+			}
+			<ThemeToggle />
+		</div>
+	</nav>
+</header>
+
+<style>
+	header {
+		width: 100%;
+	}
+	nav {
+		max-width: 44rem;
+		margin-inline: auto;
+		padding: 1.4rem 1.25rem;
+		display: flex;
+		align-items: center;
+		gap: 1.5rem;
+	}
+	.logo {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 1.3rem;
+		letter-spacing: -0.02em;
+		color: var(--tx);
+		text-decoration: none;
+	}
+	.logo .dot {
+		color: var(--coral);
+	}
+	.links {
+		display: flex;
+		gap: 1.1rem;
+		margin-left: auto;
+	}
+	.icons {
+		display: flex;
+		align-items: center;
+		gap: 0.15rem;
+	}
+	.icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.45rem;
+		border-radius: 50%;
+		color: var(--tx-2);
+		transition:
+			color 0.2s ease,
+			background 0.2s ease;
+	}
+	.icon.gh:hover {
+		color: var(--lav);
+		background: color-mix(in srgb, var(--lav) 14%, transparent);
+	}
+	.icon.yt:hover {
+		color: var(--coral);
+		background: color-mix(in srgb, var(--coral) 14%, transparent);
+	}
+</style>

@@ -1,0 +1,66 @@
+---
+import { GITHUB_URL, SITE_TITLE, YOUTUBE_URL } from '../consts';
+
+const today = new Date();
+---
+
+<footer>
+	<div class="dots" aria-hidden="true">
+		<span class="d1"></span><span class="d2"></span><span class="d3"></span><span class="d4"
+		></span><span class="d5"></span>
+	</div>
+	<p>
+		© {today.getFullYear()}
+		{SITE_TITLE} · <a href="/rss.xml">RSS</a>
+		{GITHUB_URL && <> · <a href={GITHUB_URL}>GitHub</a></>}
+		{YOUTUBE_URL && <> · <a href={YOUTUBE_URL}>YouTube</a></>}
+		 · Built with <a href="https://astro.build" target="_blank">Astro</a>
+	</p>
+</footer>
+
+<style>
+	footer {
+		padding: 2.5rem 1.25rem 3.5rem;
+		text-align: center;
+		font-size: 0.85rem;
+		color: var(--tx-2);
+	}
+	.dots {
+		display: flex;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+	.dots span {
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+	}
+	.d1 {
+		background: var(--coral);
+	}
+	.d2 {
+		background: var(--sun);
+	}
+	.d3 {
+		background: var(--mint);
+	}
+	.d4 {
+		background: var(--sky);
+	}
+	.d5 {
+		background: var(--lav);
+	}
+	a {
+		color: var(--tx-2);
+		text-decoration: none;
+		border-bottom: 1px solid var(--line);
+		transition:
+			color 0.2s ease,
+			border-color 0.2s ease;
+	}
+	a:hover {
+		color: var(--coral);
+		border-bottom-color: var(--coral);
+	}
+</style>

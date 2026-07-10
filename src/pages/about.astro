@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/BlogPost.astro';
+import { GITHUB_URL } from '../consts';
+---
+
+<Layout
+	title="关于 / About"
+	description="关于 Agnes 和这个小站。"
+	pubDate={new Date('2026-07-10')}
+	lang="zh"
+	tags={[]}
+>
+	<p>
+		你好，我是 Agnes。这里是我的个人小站——写写代码、记记生活，以后也许还会放一些自己拍的视频。
+	</p>
+	<p>
+		这个站用 <a href="https://astro.build" target="_blank">Astro</a> 搭建，托管在 GitHub Pages
+		上：每次推送新的 Markdown 文件，网站就会自动更新。
+	</p>
+	<p>
+		Hi, I'm Agnes. This is my little corner of the internet — notes on code, life, and (someday)
+		videos. Posts are written in Chinese or English, and you can filter by language on the home
+		page.
+	</p>
+	<p>
+		想联系我或看看我在做什么，欢迎来 <a href={GITHUB_URL} target="_blank">GitHub</a> 逛逛。
+	</p>
+</Layout>
