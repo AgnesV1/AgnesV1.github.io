@@ -111,6 +111,133 @@ a {
 	border-radius: 2px;
 }
 
+/* ===== 全站底图：日间水彩云朵，夜间深空星点 =====
+   全部用 CSS 渐变画成，零图片文件；颜色取自顶部的五色变量，换配色会自动跟上。
+   before = 静态层（日：天色渐变；夜：细星 + 角落星云），
+   after  = 动效层（日：云朵极慢漂移；夜：亮星缓缓呼吸）。 */
+body::before,
+body::after {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+}
+
+/* --- 日间：顶部一抹天色，三朵水彩云（白色高光 + 向下错开的淡蓝云影） --- */
+body::before {
+	background-image: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--sky) 11%, transparent),
+		transparent 24rem
+	);
+}
+body::after {
+	inset: 0 -4rem; /* 左右加宽，漂移时不露边 */
+	background-image:
+		radial-gradient(30rem 11rem at 76% 6%, rgba(255, 255, 255, 0.95), transparent 62%),
+		radial-gradient(34rem 12rem at 78% 10%, color-mix(in srgb, var(--sky) 16%, transparent), transparent 65%),
+		radial-gradient(22rem 8rem at 13% 14%, rgba(255, 255, 255, 0.9), transparent 62%),
+		radial-gradient(26rem 9rem at 15% 18%, color-mix(in srgb, var(--sky) 13%, transparent), transparent 65%),
+		radial-gradient(24rem 8.5rem at 52% 30%, rgba(255, 255, 255, 0.85), transparent 62%),
+		radial-gradient(28rem 9.5rem at 54% 34%, color-mix(in srgb, var(--sky) 10%, transparent), transparent 68%);
+	animation: cloud-drift 150s ease-in-out infinite alternate;
+}
+@keyframes cloud-drift {
+	to {
+		transform: translateX(3rem);
+	}
+}
+
+/* --- 夜间：角落星云 + 三组错开周期平铺的细星（平铺周期互不相同，看不出重复） --- */
+[data-theme='dark'] body::before {
+	background-image:
+		radial-gradient(44rem 30rem at 85% 8%, color-mix(in srgb, var(--lav) 13%, transparent), transparent 70%),
+		radial-gradient(38rem 26rem at 6% 82%, color-mix(in srgb, var(--sky) 9%, transparent), transparent 70%),
+		radial-gradient(1px 1px at 8% 12%, rgba(255, 255, 255, 0.35) 50%, transparent 51%),
+		radial-gradient(1px 1px at 33% 44%, rgba(255, 255, 255, 0.2) 50%, transparent 51%),
+		radial-gradient(1px 1px at 55% 8%, rgba(255, 255, 255, 0.31) 50%, transparent 51%),
+		radial-gradient(1px 1px at 72% 66%, rgba(255, 255, 255, 0.25) 50%, transparent 51%),
+		radial-gradient(1px 1px at 21% 82%, rgba(255, 255, 255, 0.29) 50%, transparent 51%),
+		radial-gradient(1px 1px at 90% 30%, rgba(255, 255, 255, 0.33) 50%, transparent 51%),
+		radial-gradient(1.3px 1.3px at 15% 25%, rgba(255, 255, 255, 0.3) 50%, transparent 51%),
+		radial-gradient(1.3px 1.3px at 48% 70%, rgba(255, 255, 255, 0.33) 50%, transparent 51%),
+		radial-gradient(1.3px 1.3px at 78% 12%, rgba(255, 255, 255, 0.39) 50%, transparent 51%),
+		radial-gradient(1.3px 1.3px at 64% 48%, rgba(255, 255, 255, 0.29) 50%, transparent 51%),
+		radial-gradient(1.5px 1.5px at 30% 58%, color-mix(in srgb, var(--mint) 68%, transparent) 50%, transparent 51%),
+		radial-gradient(1.6px 1.6px at 25% 18%, rgba(255, 255, 255, 0.41) 50%, transparent 51%),
+		radial-gradient(1.6px 1.6px at 70% 78%, rgba(255, 255, 255, 0.3) 50%, transparent 51%),
+		radial-gradient(1.6px 1.6px at 85% 40%, color-mix(in srgb, var(--sun) 68%, transparent) 50%, transparent 51%),
+		radial-gradient(1.5px 1.5px at 10% 62%, color-mix(in srgb, var(--sky) 68%, transparent) 50%, transparent 51%);
+	background-repeat:
+		no-repeat,
+		no-repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat,
+		repeat;
+	background-size:
+		auto,
+		auto,
+		620px 740px,
+		620px 740px,
+		620px 740px,
+		620px 740px,
+		620px 740px,
+		620px 740px,
+		840px 980px,
+		840px 980px,
+		840px 980px,
+		840px 980px,
+		840px 980px,
+		1120px 1260px,
+		1120px 1260px,
+		1120px 1260px,
+		1120px 1260px;
+}
+
+/* 夜间动效层：几颗带光晕的亮星,极缓地明暗呼吸 */
+[data-theme='dark'] body::after {
+	inset: 0;
+	background-image:
+		radial-gradient(3px 3px at 18% 30%, rgba(255, 255, 255, 0.58), transparent 60%),
+		radial-gradient(2.5px 2.5px at 58% 12%, rgba(255, 255, 255, 0.5), transparent 60%),
+		radial-gradient(3px 3px at 80% 58%, rgba(255, 255, 255, 0.54), transparent 60%),
+		radial-gradient(2.5px 2.5px at 38% 76%, rgba(255, 255, 255, 0.53), transparent 60%),
+		radial-gradient(3.5px 3.5px at 68% 88%, color-mix(in srgb, var(--lav) 75%, transparent), transparent 60%);
+	background-repeat: repeat;
+	background-size: 980px 1150px;
+	animation: twinkle 14s ease-in-out infinite;
+}
+@keyframes twinkle {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.45;
+	}
+}
+
+/* 系统设置了「减少动态」就完全静止 */
+@media (prefers-reduced-motion: reduce) {
+	body::before,
+	body::after {
+		animation: none;
+	}
+}
+
 /* ===== 彩色小徽章（标签、语言标识） ===== */
 .c0 {
 	--c: var(--coral);
