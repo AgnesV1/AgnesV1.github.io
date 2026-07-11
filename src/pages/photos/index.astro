@@ -1,0 +1,497 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Image, getImage } from 'astro:assets';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
+
+// 相册数据全部来自文件夹,不需要写任何配置:
+//   src/assets/photos/2026/   → 按年份分组,新的年份在上
+//   src/assets/photos/pinned/ → 置顶,展示在最顶部
+// 组内按文件名倒序(建议命名 YYYY-MM-描述.jpg,新照片自然排前面);
+// 文件名去掉日期前缀后就是照片说明,连字符会变成空格。
+const modules = import.meta.glob<{ default: ImageMetadata }>(
+	'../../assets/photos/**/*.{jpg,jpeg,JPG,JPEG,png,PNG,webp,WEBP}',
+	{ eager: true },
+);
+
+const UNGROUPED = '__ungrouped__';
+
+function toCaption(filename: string): string {
+	return filename
+		.replace(/\.(jpe?g|png|webp)$/i, '')
+		.replace(/^\d{4}([-_.]\d{1,2}){0,2}[-_.]?\s*/, '')
+		.replace(/[-_]+/g, ' ')
+		.trim();
+}
+
+type Photo = {
+	img: ImageMetadata;
+	file: string;
+	caption: string;
+	full: string; // 灯箱大图地址
+};
+
+const byGroup = new Map<string, Photo[]>();
+for (const [path, mod] of Object.entries(modules)) {
+	const rel = path.split('/photos/')[1];
+	const parts = rel.split('/');
+	const group = parts.length > 1 ? parts[0] : UNGROUPED;
+	const file = parts[parts.length - 1];
+	const img = mod.default;
+	const large = await getImage({ src: img, width: 1600, format: 'webp', quality: 82 });
+	const list = byGroup.get(group) ?? [];
+	list.push({ img, file, caption: toCaption(file), full: large.src });
+	byGroup.set(group, list);
+}
+
+// 组内:文件名倒序(新的在前)
+for (const list of byGroup.values()) {
+	list.sort((a, b) => b.file.localeCompare(a.file, 'en', { numeric: true }));
+}
+
+const pinned = byGroup.get('pinned') ?? [];
+
+// 其余分组:年份(纯数字)倒序在前,自定义目录名其次,未分组最后
+const groups = [...byGroup.entries()]
+	.filter(([name]) => name !== 'pinned')
+	.sort(([a], [b]) => {
+		const na = /^\d+$/.test(a);
+		const nb = /^\d+$/.test(b);
+		if (na && nb) return Number(b) - Number(a);
+		if (na !== nb) return na ? -1 : 1;
+		if (a === UNGROUPED) return 1;
+		if (b === UNGROUPED) return -1;
+		return a.localeCompare(b);
+	});
+
+const total = pinned.length + groups.reduce((n, [, list]) => n + list.length, 0);
+// 全页照片的统一序号,灯箱按它前后切换;前几张 eager 加载
+let flatIndex = 0;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<BaseHead
+			title={`摄影 Photos · ${SITE_TITLE}`}
+			description="快门记下的一些瞬间。Moments caught on camera."
+		/>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="hero">
+				<h1>摄影 <span class="en-word">Photos</span></h1>
+				<p class="intro only-zh">快门记下的一些瞬间,按年份往回翻。</p>
+				<p class="intro only-en">Moments caught on camera, year by year.</p>
+			</section>
+
+			{
+				total === 0 ? (
+					<p class="empty">
+						<span class="only-zh">相册还空着,快去拍点什么吧。</span>
+						<span class="only-en">The album is empty — go shoot something.</span>
+					</p>
+				) : (
+					<section class="album">
+						{pinned.length > 0 && (
+							<div class="row pin-row">
+								<div class="label pin-label">
+									<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+										<circle cx="12" cy="7.5" r="4.5" />
+										<path d="M10.7 11.5h2.6l-0.8 10h-1z" />
+									</svg>
+									<span class="only-zh">置顶</span>
+									<span class="only-en">Pinned</span>
+								</div>
+								<div class="wall">
+									{pinned.map((p) => {
+										const i = flatIndex++;
+										return (
+											<a
+												class="photo"
+												href={p.full}
+												target="_blank"
+												rel="noopener"
+												data-index={i}
+												data-caption={p.caption}
+											>
+												<Image
+													src={p.img}
+													widths={[420, 840]}
+													sizes="(max-width: 560px) 46vw, 275px"
+													alt={p.caption || 'photo'}
+													loading={i < 4 ? 'eager' : 'lazy'}
+												/>
+											</a>
+										);
+									})}
+								</div>
+							</div>
+						)}
+
+						{groups.map(([name, photos], gi) => (
+							<div class={`row c${gi % 5}`}>
+								<div class="label year">
+									{name === UNGROUPED ? (
+										<>
+											<span class="only-zh">未分组</span>
+											<span class="only-en">Unsorted</span>
+										</>
+									) : (
+										name
+									)}
+								</div>
+								<div class="wall">
+									{photos.map((p) => {
+										const i = flatIndex++;
+										return (
+											<a
+												class="photo"
+												href={p.full}
+												target="_blank"
+												rel="noopener"
+												data-index={i}
+												data-caption={p.caption}
+											>
+												<Image
+													src={p.img}
+													widths={[420, 840]}
+													sizes="(max-width: 560px) 46vw, 275px"
+													alt={p.caption || 'photo'}
+													loading={i < 4 ? 'eager' : 'lazy'}
+												/>
+											</a>
+										);
+									})}
+								</div>
+							</div>
+						))}
+					</section>
+				)
+			}
+		</main>
+		<Footer />
+
+		<dialog id="lightbox" aria-label="查看大图 View photo">
+			<button class="lb-btn lb-close" aria-label="关闭 Close">×</button>
+			<button class="lb-btn lb-prev" aria-label="上一张 Previous">‹</button>
+			<figure>
+				<img id="lb-img" src="" alt="" />
+				<figcaption>
+					<span id="lb-cap"></span>
+					<span id="lb-count"></span>
+				</figcaption>
+			</figure>
+			<button class="lb-btn lb-next" aria-label="下一张 Next">›</button>
+		</dialog>
+
+		<script>
+			// 灯箱:点缩略图放大;左右键/按钮/滑动切换;Esc、× 或点空白处关闭。
+			// 没有 JS 时 <a> 直接新窗口打开大图,功能不丢。
+			const photos = [...document.querySelectorAll<HTMLAnchorElement>('a.photo')];
+			const box = document.getElementById('lightbox') as HTMLDialogElement;
+			const img = document.getElementById('lb-img') as HTMLImageElement;
+			const cap = document.getElementById('lb-cap')!;
+			const count = document.getElementById('lb-count')!;
+			let cur = 0;
+
+			function show(i: number) {
+				cur = (i + photos.length) % photos.length;
+				const p = photos[cur];
+				img.src = p.href;
+				img.alt = p.dataset.caption || 'photo';
+				cap.textContent = p.dataset.caption || '';
+				count.textContent = `${cur + 1} / ${photos.length}`;
+			}
+
+			photos.forEach((p, i) => {
+				p.addEventListener('click', (e) => {
+					e.preventDefault();
+					show(i);
+					box.showModal();
+				});
+			});
+
+			box.querySelector('.lb-close')!.addEventListener('click', () => box.close());
+			box.querySelector('.lb-prev')!.addEventListener('click', () => show(cur - 1));
+			box.querySelector('.lb-next')!.addEventListener('click', () => show(cur + 1));
+
+			// 监听放在 document 上:即使焦点不在灯箱里,方向键也能用
+			document.addEventListener('keydown', (e) => {
+				if (!box.open) return;
+				if (e.key === 'ArrowLeft') show(cur - 1);
+				if (e.key === 'ArrowRight') show(cur + 1);
+				if (e.key === 'Escape') box.close();
+			});
+
+			// 点图片和按钮以外的空白处关闭
+			box.addEventListener('click', (e) => {
+				const t = e.target as HTMLElement;
+				if (t === box || t.tagName === 'FIGURE' || t.tagName === 'FIGCAPTION') box.close();
+			});
+
+			// 手机上左右滑动切换
+			let touchX = 0;
+			box.addEventListener('touchstart', (e) => (touchX = e.touches[0].clientX), { passive: true });
+			box.addEventListener(
+				'touchend',
+				(e) => {
+					const dx = e.changedTouches[0].clientX - touchX;
+					if (Math.abs(dx) > 40) show(dx > 0 ? cur - 1 : cur + 1);
+				},
+				{ passive: true },
+			);
+		</script>
+	</body>
+</html>
+
+<style>
+	.hero {
+		margin: 2.5rem 0 3rem;
+	}
+	.hero h1 {
+		font-size: 2rem;
+		letter-spacing: -0.02em;
+		margin: 0 0 0.8rem;
+	}
+	.hero .en-word {
+		font-family: var(--font-mono);
+		font-size: 0.6em;
+		font-weight: 400;
+		color: var(--tx-2);
+	}
+	.intro {
+		font-size: 1.05rem;
+		color: var(--tx);
+		line-height: 2;
+		margin: 0;
+	}
+	.empty {
+		color: var(--tx-2);
+		font-size: 0.95rem;
+	}
+
+	/* ===== 朋友圈式时间线:左窄列(置顶标 / 年份)+ 右照片墙 ===== */
+	.row {
+		display: grid;
+		grid-template-columns: 6.5rem 1fr;
+		gap: 1.2rem;
+		margin: 0 0 2.8rem;
+	}
+	.row.c0 {
+		--c: var(--coral);
+	}
+	.row.c1 {
+		--c: var(--mint);
+	}
+	.row.c2 {
+		--c: var(--lav);
+	}
+	.row.c3 {
+		--c: var(--sun);
+	}
+	.row.c4 {
+		--c: var(--sky);
+	}
+
+	.label {
+		position: sticky;
+		top: 1.2rem;
+		align-self: start;
+		line-height: 1.2;
+	}
+	.year {
+		font-family: var(--font-mono);
+		font-size: 1.7rem;
+		font-weight: 700;
+		letter-spacing: -0.04em;
+		color: var(--tx);
+	}
+	/* 年份右上角的彩色小菱形,呼应正文 h2 的装饰 */
+	.year::after {
+		content: '';
+		display: inline-block;
+		width: 0.3em;
+		height: 0.3em;
+		border-radius: 2px;
+		background: var(--c, var(--coral));
+		transform: rotate(45deg);
+		margin-left: 0.3em;
+		vertical-align: 0.65em;
+	}
+
+	.pin-label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--sun);
+		padding-top: 0.45rem;
+	}
+	.pin-label svg {
+		transform: rotate(35deg);
+		flex-shrink: 0;
+	}
+
+	/* 照片墙:两列瀑布流,容得下横竖方各种比例 */
+	.wall {
+		columns: 2;
+		column-gap: 0.85rem;
+	}
+	.photo {
+		display: block;
+		margin: 0 0 0.85rem;
+		break-inside: avoid;
+		border-radius: 14px;
+		overflow: hidden;
+		line-height: 0;
+		cursor: zoom-in;
+		background: var(--bg-soft);
+	}
+	.photo img {
+		width: 100%;
+		height: auto;
+		transition:
+			transform 0.35s ease,
+			filter 0.35s ease;
+	}
+	.photo:hover img {
+		transform: scale(1.03);
+		filter: brightness(1.04);
+	}
+
+	@media (max-width: 560px) {
+		.row {
+			grid-template-columns: 1fr;
+			gap: 0.7rem;
+			margin-bottom: 2.2rem;
+		}
+		.label {
+			position: static;
+		}
+		.year {
+			font-size: 1.35rem;
+		}
+		.wall {
+			column-gap: 0.6rem;
+		}
+		.photo {
+			margin-bottom: 0.6rem;
+			border-radius: 10px;
+		}
+	}
+
+	/* ===== 灯箱:深色底看照片 ===== */
+	#lightbox {
+		border: 0;
+		padding: 0;
+		width: 100vw;
+		height: 100dvh;
+		max-width: 100vw;
+		max-height: 100dvh;
+		background: transparent;
+		overflow: hidden;
+	}
+	#lightbox::backdrop {
+		background: rgba(13, 11, 18, 0.93);
+	}
+	#lightbox figure {
+		margin: 0;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.9rem;
+		padding: 2.5rem 4.5rem;
+	}
+	#lb-img {
+		max-width: 100%;
+		max-height: calc(100dvh - 8rem);
+		object-fit: contain;
+		border-radius: 10px;
+	}
+	#lightbox figcaption {
+		display: flex;
+		align-items: baseline;
+		gap: 0.9em;
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		color: rgba(255, 255, 255, 0.78);
+	}
+	#lb-count {
+		color: rgba(255, 255, 255, 0.42);
+		font-size: 0.9em;
+	}
+
+	.lb-btn {
+		position: absolute;
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		border: 0;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.09);
+		color: rgba(255, 255, 255, 0.85);
+		font-size: 1.6rem;
+		line-height: 1;
+		cursor: pointer;
+		transition: background 0.2s ease;
+	}
+	.lb-btn:hover {
+		background: rgba(255, 255, 255, 0.2);
+	}
+	.lb-close {
+		top: 1rem;
+		right: 1rem;
+		font-size: 1.3rem;
+	}
+	.lb-prev {
+		left: 1rem;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+	.lb-next {
+		right: 1rem;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	@media (max-width: 640px) {
+		#lightbox figure {
+			padding: 1rem 0.8rem 4.5rem;
+		}
+		#lb-img {
+			border-radius: 8px;
+			max-height: calc(100dvh - 7.5rem);
+		}
+		.lb-prev,
+		.lb-next {
+			top: auto;
+			bottom: 0.9rem;
+			transform: none;
+		}
+		.lb-prev {
+			left: 0.9rem;
+		}
+		.lb-next {
+			right: 0.9rem;
+		}
+	}
+</style>
+
+<style is:global>
+	/* 灯箱打开时锁住页面滚动 */
+	body:has(#lightbox[open]) {
+		overflow: hidden;
+	}
+</style>

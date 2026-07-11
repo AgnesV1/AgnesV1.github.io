@@ -23,7 +23,8 @@ Consult these guides before working on related tasks:
 
 ## 项目约定
 
-- 栏目结构：`blog`（笔记，含阅读笔记，用 tags 区分）和 `writing`（虚构写作）两个 content collection；「摄影 Photos」是导航外链，在 `src/consts.ts` 填 `PHOTOS_URL` 后自动出现。
+- 栏目结构：`blog`（笔记，含阅读笔记，用 tags 区分）和 `writing`（虚构写作）两个 content collection；「摄影 Photos」是站内页面 `/photos`（朋友圈式时间线：左侧年份、右侧瀑布流照片墙 + 置顶区 + 灯箱）。
+- 摄影页加照片零配置：照片放 `src/assets/photos/<年份>/`（如 `2026/`），置顶的放 `src/assets/photos/pinned/`；组内按文件名倒序，建议命名 `YYYY-MM-描述.jpg`；文件名去掉日期前缀后即照片说明（连字符变空格，中文文件名可直接用）。放别的目录名会按目录名单独分组。现有的 9 张是渐变占位图（画面角落有 sample 字样），换真照片时直接删掉。
 - 双语：全站中英切换按钮在页头（`LangToggle`，写入 `html[data-lang]` + localStorage）；页面元素用 `.only-zh` / `.only-en` 类按语言显隐。文章配对翻译的约定是 `foo.md`（中文）+ `foo.en.md`（英文），URL 为 `/blog/foo/` 与 `/blog/foo/en/`，页面自动互链；双语配对只用于 blog，不用于 writing。
 - 文章 frontmatter：`lang: zh | en`（默认 zh）；`tags` 渲染为彩色小标签；可选 `references`（字符串或 `{title, url?, author?}` 数组）会在文末渲染为可折叠的参考文献区块，不写就不显示。
 - 设计语言是「极简排版 + 柔和多巴胺色」：颜色/字体变量集中在 `src/styles/global.css` 顶部的 `:root` 和 `[data-theme='dark']`，改配色只动那里。

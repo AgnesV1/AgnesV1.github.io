@@ -1,5 +1,5 @@
 ---
-import { GITHUB_URL, INSTAGRAM_URL, PHOTOS_URL, SITE_TITLE, YOUTUBE_URL } from '../consts';
+import { GITHUB_URL, INSTAGRAM_URL, SITE_TITLE, YOUTUBE_URL } from '../consts';
 import HeaderLink from './HeaderLink.astro';
 import LangToggle from './LangToggle.astro';
 import ThemeToggle from './ThemeToggle.astro';
@@ -11,13 +11,7 @@ import ThemeToggle from './ThemeToggle.astro';
 		<div class="links">
 			<HeaderLink href="/">笔记 <span class="en-word">Notes</span></HeaderLink>
 			<HeaderLink href="/writing">写作 <span class="en-word">Writing</span></HeaderLink>
-			{
-				PHOTOS_URL && (
-					<a class="ext" href={PHOTOS_URL} target="_blank" rel="noopener">
-						摄影 <span class="en-word">Photos</span> <span class="arrow">↗</span>
-					</a>
-				)
-			}
+			<HeaderLink href="/photos">摄影 <span class="en-word">Photos</span></HeaderLink>
 			<HeaderLink href="/about">About</HeaderLink>
 		</div>
 		<div class="icons">
@@ -99,25 +93,6 @@ import ThemeToggle from './ThemeToggle.astro';
 		font-family: var(--font-mono);
 		font-size: 0.8em;
 		opacity: 0.75;
-	}
-	.ext {
-		display: inline-block;
-		text-decoration: none;
-		color: var(--tx-2);
-		font-size: 0.95rem;
-		padding: 0.15rem 0.1rem;
-		border-bottom: 2px solid transparent;
-		transition:
-			color 0.2s ease,
-			border-color 0.2s ease;
-	}
-	.ext:hover {
-		color: var(--tx);
-		border-bottom-color: var(--sun);
-	}
-	.ext .arrow {
-		font-size: 0.8em;
-		color: var(--sun);
 	}
 	.icons {
 		display: flex;

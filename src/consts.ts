@@ -11,6 +11,5 @@ export const YOUTUBE_URL = '';
 // Instagram 主页链接，填上后页头会出现相机图标。
 export const INSTAGRAM_URL = '';
 
-// 摄影栏目（外链）：填上链接后，导航栏自动出现「摄影 Photos ↗」。
-// 可以指向 Instagram、Glass、Flickr 或任何相册页面；留空则不显示。
-export const PHOTOS_URL = '';
+// 摄影栏目是站内页面 /photos：照片放 src/assets/photos/<年份>/，
+// 置顶的放 src/assets/photos/pinned/，页面会自动展示，不需要改代码。
