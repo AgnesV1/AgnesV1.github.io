@@ -30,12 +30,14 @@ const postMeta = (id: string) => {
 				<h1 class="only-zh">你好，我是 Agnes <span class="wave">👋</span></h1>
 				<h1 class="only-en">Hi, I'm Agnes <span class="wave">👋</span></h1>
 				<p class="intro only-zh">
-					在这里记<mark class="m-coral">笔记</mark>、写<mark class="m-mint">故事</mark
-					>，也放一些<mark class="m-lav">照片</mark>。
+					在这里记<mark class="m-coral">笔记</mark>、写<a href="/writing"
+						><mark class="m-mint">故事</mark></a
+					>，也放一些<a href="/photos"><mark class="m-lav">照片</mark></a>。
 				</p>
 				<p class="intro only-en">
-					I keep <mark class="m-coral">notes</mark>, tell <mark class="m-mint">stories</mark>, and
-					take <mark class="m-lav">photos</mark> here.
+					I keep <mark class="m-coral">notes</mark>, tell
+					<a href="/writing"><mark class="m-mint">stories</mark></a>, and take
+					<a href="/photos"><mark class="m-lav">photos</mark></a> here.
 				</p>
 			</section>
 
@@ -123,6 +125,14 @@ const postMeta = (id: string) => {
 		color: inherit;
 		padding: 0 0.1em;
 		background-image: linear-gradient(transparent 62%, var(--mark) 62%);
+	}
+	/* 简介里的「故事 / 照片」是入口链接：不变色不加下划线,悬停时高亮块变厚 */
+	.intro a {
+		color: inherit;
+		text-decoration: none;
+	}
+	.intro a:hover mark {
+		background-image: linear-gradient(transparent 30%, var(--mark) 30%);
 	}
 	.m-coral {
 		--mark: color-mix(in srgb, var(--coral) 30%, transparent);
