@@ -6,13 +6,36 @@ import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 
-type Props = CollectionEntry<'blog'>['data'];
+type Props = CollectionEntry<'blog'>['data'] & {
+	// 有配对翻译时传入对应 URL，页头语言切换会直接跳过去
+	translationHref?: string;
+	// 文末返回链接（写作栏目会传 /writing/）
+	backHref?: string;
+	backLabelZh?: string;
+	backLabelEn?: string;
+};
 
-const { title, description, pubDate, updatedDate, heroImage, lang, tags } = Astro.props;
+const {
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	heroImage,
+	lang,
+	tags,
+	references = [],
+	translationHref,
+	backHref = '/',
+	backLabelZh = '回到全部笔记',
+	backLabelEn = 'All notes',
+} = Astro.props;
 const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
+
+// string 项转成统一的对象形状
+const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
 ---
 
-<html lang={htmlLang}>
+<html lang={htmlLang} data-page-lang={lang} data-translation-href={translationHref}>
 	<head>
 		<BaseHead title={title} description={description} />
 	</head>
@@ -30,6 +53,13 @@ const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
 					<p class="meta">
 						<FormattedDate date={pubDate} />
 						<span class:list={['lang-chip', lang]}>{lang === 'zh' ? '中文' : 'EN'}</span>
+						{
+							translationHref && (
+								<a class="translation" href={translationHref}>
+									{lang === 'zh' ? 'Read in English →' : '阅读中文版 →'}
+								</a>
+							)
+						}
 					</p>
 					<h1>{title}</h1>
 					{
@@ -52,7 +82,34 @@ const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
 				<div class="prose">
 					<slot />
 				</div>
-				<p class="back"><a href="/">← 回到全部文章</a></p>
+				{
+					refs.length > 0 && (
+						<details class="refs" open>
+							<summary>
+								参考 References <span class="count">· {refs.length}</span>
+							</summary>
+							<ol>
+								{refs.map((ref) => (
+									<li>
+										{ref.author && <span class="author">{ref.author}, </span>}
+										{ref.url ? (
+											<a href={ref.url} target="_blank" rel="noopener">
+												{ref.title} ↗
+											</a>
+										) : (
+											<span>{ref.title}</span>
+										)}
+									</li>
+								))}
+							</ol>
+						</details>
+					)
+				}
+				<p class="back">
+					<a href={backHref}>
+						← <span class="only-zh">{backLabelZh}</span><span class="only-en">{backLabelEn}</span>
+					</a>
+				</p>
 			</article>
 		</main>
 		<Footer />
@@ -75,8 +132,18 @@ const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
 		color: var(--tx-2);
 		display: flex;
 		align-items: center;
+		flex-wrap: wrap;
 		gap: 0.6rem;
 		margin: 0 0 0.9rem;
+	}
+	.translation {
+		color: var(--sky);
+		text-decoration: none;
+		border-bottom: 1px solid color-mix(in srgb, var(--sky) 40%, transparent);
+		transition: border-color 0.2s ease;
+	}
+	.translation:hover {
+		border-bottom-color: var(--sky);
 	}
 	h1 {
 		font-size: 2.1rem;
@@ -96,6 +163,57 @@ const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
 		font-style: italic;
 		margin: 0.8rem 0 0;
 	}
+
+	/* 参考文献：可折叠，仅当 frontmatter 写了 references 才渲染 */
+	.refs {
+		margin-top: 3rem;
+		border-top: 1px solid var(--line);
+		padding-top: 1.1rem;
+	}
+	.refs summary {
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		color: var(--tx-2);
+		cursor: pointer;
+		user-select: none;
+		list-style-position: outside;
+		transition: color 0.2s ease;
+	}
+	.refs summary:hover {
+		color: var(--sky);
+	}
+	.refs .count {
+		color: var(--sky);
+	}
+	.refs ol {
+		margin: 0.9rem 0 0;
+		padding-left: 1.3rem;
+		font-size: 0.88rem;
+		line-height: 1.8;
+		color: var(--tx-2);
+	}
+	.refs li {
+		margin: 0.3rem 0;
+		padding-left: 0.2rem;
+	}
+	.refs li::marker {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--sky);
+	}
+	.refs .author {
+		color: var(--tx);
+	}
+	.refs a {
+		color: var(--sky);
+		text-decoration: none;
+		border-bottom: 1px solid color-mix(in srgb, var(--sky) 40%, transparent);
+		transition: border-color 0.2s ease;
+	}
+	.refs a:hover {
+		border-bottom-color: var(--sky);
+	}
+
 	.back {
 		margin-top: 3.5rem;
 	}

@@ -4,6 +4,9 @@ description: '阿多诺《论流行音乐》阅读笔记：标准化、伪个性
 pubDate: 2019-07-14
 lang: zh
 tags: ['note']
+references:
+  - author: 'Theodor W. Adorno (with George Simpson)'
+    title: '“On Popular Music”, Studies in Philosophy and Social Science, IX (1941)'
 ---
 
 不懂乐理，不懂哲学，我试着边笔记边翻译几句。

@@ -1,0 +1,56 @@
+<button id="lang-toggle" aria-label="切换语言 / Switch language" title="中 / EN">
+	<span class="to-en">EN</span>
+	<span class="to-zh">中</span>
+</button>
+
+<style>
+	button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: none;
+		background: none;
+		cursor: pointer;
+		min-width: 2.1rem;
+		padding: 0.45rem 0.35rem;
+		border-radius: 999px;
+		color: var(--tx-2);
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		font-weight: 700;
+		line-height: 1;
+		transition:
+			color 0.2s ease,
+			background 0.2s ease;
+	}
+	button:hover {
+		color: var(--mint);
+		background: color-mix(in srgb, var(--mint) 14%, transparent);
+	}
+	.to-zh {
+		display: none;
+	}
+	:global(html[data-lang='en']) .to-en {
+		display: none;
+	}
+	:global(html[data-lang='en']) .to-zh {
+		display: inline;
+	}
+</style>
+
+<script>
+	const btn = document.getElementById('lang-toggle');
+	btn?.addEventListener('click', () => {
+		const html = document.documentElement;
+		const next = html.dataset.lang === 'en' ? 'zh' : 'en';
+		localStorage.setItem('lang', next);
+		// 文章页有配对翻译时，切换语言直接跳到对应版本
+		const translation = html.dataset.translationHref;
+		if (translation && html.dataset.pageLang && html.dataset.pageLang !== next) {
+			location.href = translation;
+			return;
+		}
+		html.dataset.lang = next;
+		document.dispatchEvent(new CustomEvent('langchange'));
+	});
+</script>

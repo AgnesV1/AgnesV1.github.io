@@ -4,17 +4,30 @@ import BlogPost from '../../layouts/BlogPost.astro';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('blog');
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: post,
-	}));
-}
-type Props = CollectionEntry<'blog'>;
+	const ids = new Set(posts.map((p) => p.id));
 
-const post = Astro.props;
+	// `foo.en` 是 `foo` 的英文版：中文在 /blog/foo/，英文在 /blog/foo/en/
+	return posts.map((post) => {
+		const isEn = post.id.endsWith('.en');
+		const base = isEn ? post.id.slice(0, -3) : post.id;
+		const counterpart = isEn ? base : `${post.id}.en`;
+		const translationHref = ids.has(counterpart)
+			? isEn
+				? `/blog/${base}/`
+				: `/blog/${base}/en/`
+			: undefined;
+		return {
+			params: { slug: isEn ? `${base}/en` : post.id },
+			props: { post, translationHref },
+		};
+	});
+}
+type Props = { post: CollectionEntry<'blog'>; translationHref?: string };
+
+const { post, translationHref } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<BlogPost {...post.data}>
+<BlogPost {...post.data} translationHref={translationHref}>
 	<Content />
 </BlogPost>

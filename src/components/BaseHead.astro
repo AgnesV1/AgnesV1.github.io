@@ -29,12 +29,13 @@ const { title, description, image = '/og.png' } = Astro.props;
 />
 <meta name="generator" content={Astro.generator} />
 
-<!-- 主题初始化：必须在样式生效前运行，避免暗色模式闪白屏 -->
+<!-- 主题与语言初始化：必须在样式生效前运行，避免闪烁 -->
 <script is:inline>
 	const theme =
 		localStorage.getItem('theme') ??
 		(matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 	document.documentElement.dataset.theme = theme;
+	document.documentElement.dataset.lang = localStorage.getItem('lang') ?? 'zh';
 </script>
 
 <Font cssVariable="--font-display" preload />

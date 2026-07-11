@@ -329,3 +329,12 @@ a {
 	clip-path: inset(50%);
 	white-space: nowrap;
 }
+
+/* 全站中英切换：页头 LangToggle 写入 html[data-lang]，
+   标了 .only-zh / .only-en 的元素只在对应语言下显示。 */
+html[data-lang='zh'] .only-en {
+	display: none !important;
+}
+html[data-lang='en'] .only-zh {
+	display: none !important;
+}

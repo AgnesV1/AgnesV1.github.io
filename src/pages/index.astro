@@ -9,6 +9,13 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 const posts = (await getCollection('blog')).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+
+// `foo.en` 是 `foo` 的英文版：列表里两版都渲染，按当前语言只显示其一
+const postMeta = (id: string) => {
+	const isEn = id.endsWith('.en');
+	const base = isEn ? id.slice(0, -3) : id;
+	return { base, href: isEn ? `/blog/${base}/en/` : `/blog/${id}/` };
+};
 ---
 
 <!doctype html>
@@ -20,42 +27,43 @@ const posts = (await getCollection('blog')).sort(
 		<Header />
 		<main>
 			<section class="hero">
-				<h1>你好，我是 Agnes <span class="wave">👋</span></h1>
-				<p class="intro">
-					在这里写<mark class="m-coral">代码</mark>、记<mark class="m-mint">生活</mark
-					>，偶尔聊聊<mark class="m-lav">视频</mark>。
-					<span class="en">Notes on code, life & everything in between.</span>
+				<h1 class="only-zh">你好，我是 Agnes <span class="wave">👋</span></h1>
+				<h1 class="only-en">Hi, I'm Agnes <span class="wave">👋</span></h1>
+				<p class="intro only-zh">
+					在这里记<mark class="m-coral">笔记</mark>、写<mark class="m-mint">故事</mark
+					>，也放一些<mark class="m-lav">照片</mark>。
+				</p>
+				<p class="intro only-en">
+					I keep <mark class="m-coral">notes</mark>, tell <mark class="m-mint">stories</mark>, and
+					take <mark class="m-lav">photos</mark> here.
 				</p>
 			</section>
 
 			<section class="posts">
-				<div class="filter" role="group" aria-label="按语言筛选文章">
-					<button class="pill active" data-filter="all">全部</button>
-					<button class="pill" data-filter="zh">中文</button>
-					<button class="pill" data-filter="en">EN</button>
-				</div>
-
 				<ul class="post-list">
 					{
-						posts.map((post, i) => (
-							<li class={`c${i % 5}`} data-lang={post.data.lang}>
-								<a href={`/blog/${post.id}/`}>
-									<span class="date">
-										<FormattedDate date={post.data.pubDate} />
-									</span>
-									<span class="body">
-										<span class="post-title">{post.data.title}</span>
-										{post.data.tags.length > 0 && (
-											<span class="tags">
-												{post.data.tags.map((tag) => (
-													<span class="tag">#{tag}</span>
-												))}
-											</span>
-										)}
-									</span>
-								</a>
-							</li>
-						))
+						posts.map((post, i) => {
+							const { base, href } = postMeta(post.id);
+							return (
+								<li class={`c${i % 5}`} data-lang={post.data.lang} data-base={base}>
+									<a href={href}>
+										<span class="date">
+											<FormattedDate date={post.data.pubDate} />
+										</span>
+										<span class="body">
+											<span class="post-title">{post.data.title}</span>
+											{post.data.tags.length > 0 && (
+												<span class="tags">
+													{post.data.tags.map((tag) => (
+														<span class="tag">#{tag}</span>
+													))}
+												</span>
+											)}
+										</span>
+									</a>
+								</li>
+							);
+						})
 					}
 				</ul>
 			</section>
@@ -63,17 +71,31 @@ const posts = (await getCollection('blog')).sort(
 		<Footer />
 
 		<script>
-			const pills = document.querySelectorAll<HTMLButtonElement>('.filter .pill');
-			const items = document.querySelectorAll<HTMLLIElement>('.post-list li');
-			pills.forEach((pill) => {
-				pill.addEventListener('click', () => {
-					pills.forEach((p) => p.classList.toggle('active', p === pill));
-					const filter = pill.dataset.filter;
-					items.forEach((li) => {
-						li.style.display = filter === 'all' || li.dataset.lang === filter ? '' : 'none';
-					});
+			// 同一篇文章的中英两版只显示当前语言那版；没有翻译的文章始终显示
+			const applyLang = () => {
+				const lang = document.documentElement.dataset.lang || 'zh';
+				const items = [...document.querySelectorAll<HTMLLIElement>('.post-list li')];
+				const groups = new Map<string, HTMLLIElement[]>();
+				items.forEach((li) => {
+					const base = li.dataset.base || '';
+					groups.set(base, [...(groups.get(base) || []), li]);
 				});
-			});
+				groups.forEach((group) => {
+					if (group.length === 1) {
+						group[0].style.display = '';
+						return;
+					}
+					let shown = false;
+					group.forEach((li) => {
+						const match = li.dataset.lang === lang;
+						li.style.display = match ? '' : 'none';
+						shown ||= match;
+					});
+					if (!shown) group[0].style.display = '';
+				});
+			};
+			applyLang();
+			document.addEventListener('langchange', applyLang);
 		</script>
 	</body>
 </html>
@@ -96,12 +118,6 @@ const posts = (await getCollection('blog')).sort(
 		line-height: 2;
 		margin: 0;
 	}
-	.intro .en {
-		display: block;
-		color: var(--tx-2);
-		font-size: 0.95rem;
-		margin-top: 0.3rem;
-	}
 	mark {
 		background: none;
 		color: inherit;
@@ -116,33 +132,6 @@ const posts = (await getCollection('blog')).sort(
 	}
 	.m-lav {
 		--mark: color-mix(in srgb, var(--lav) 30%, transparent);
-	}
-
-	.filter {
-		display: flex;
-		gap: 0.5rem;
-		margin-bottom: 1.8rem;
-	}
-	.pill {
-		font-family: var(--font-mono);
-		font-size: 0.82rem;
-		padding: 0.32rem 0.9rem;
-		border-radius: 999px;
-		border: 1px solid var(--line);
-		background: none;
-		color: var(--tx-2);
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-	.pill:hover {
-		border-color: var(--sky);
-		color: var(--sky);
-	}
-	.pill.active {
-		border-color: var(--coral);
-		color: var(--coral);
-		background: color-mix(in srgb, var(--coral) 10%, transparent);
-		font-weight: 700;
 	}
 
 	.post-list {

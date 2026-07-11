@@ -1,0 +1,174 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
+
+const pieces = (await getCollection('writing')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<BaseHead title={`写作 Writing · ${SITE_TITLE}`} description="虚构写作：短篇与片段。Fiction: short stories & fragments." />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="hero">
+				<h1>写作 <span class="en-word">Writing</span></h1>
+				<p class="intro only-zh">一些虚构：短篇与片段。</p>
+				<p class="intro only-en">Fiction: short stories & fragments.</p>
+			</section>
+
+			<section class="posts">
+				{
+					pieces.length === 0 ? (
+						<p class="empty">
+							<span class="only-zh">还没有作品，快写第一篇吧。</span>
+							<span class="only-en">Nothing here yet — the first story is on its way.</span>
+						</p>
+					) : (
+						<ul class="post-list">
+							{pieces.map((piece, i) => (
+								<li class={`c${i % 5}`}>
+									<a href={`/writing/${piece.id}/`}>
+										<span class="date">
+											<FormattedDate date={piece.data.pubDate} />
+										</span>
+										<span class="body">
+											<span class="post-title">{piece.data.title}</span>
+											{piece.data.tags.length > 0 && (
+												<span class="tags">
+													{piece.data.tags.map((tag) => (
+														<span class="tag">#{tag}</span>
+													))}
+												</span>
+											)}
+										</span>
+									</a>
+								</li>
+							))}
+						</ul>
+					)
+				}
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.hero {
+		margin: 2.5rem 0 3rem;
+	}
+	.hero h1 {
+		font-size: 2rem;
+		letter-spacing: -0.02em;
+		margin: 0 0 0.8rem;
+	}
+	.hero .en-word {
+		font-family: var(--font-mono);
+		font-size: 0.6em;
+		font-weight: 400;
+		color: var(--tx-2);
+	}
+	.intro {
+		font-size: 1.05rem;
+		color: var(--tx);
+		line-height: 2;
+		margin: 0;
+	}
+	.empty {
+		color: var(--tx-2);
+		font-size: 0.95rem;
+	}
+
+	.post-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.post-list li {
+		margin: 0;
+	}
+	.post-list li.c0 {
+		--c: var(--coral);
+	}
+	.post-list li.c1 {
+		--c: var(--mint);
+	}
+	.post-list li.c2 {
+		--c: var(--lav);
+	}
+	.post-list li.c3 {
+		--c: var(--sun);
+	}
+	.post-list li.c4 {
+		--c: var(--sky);
+	}
+	.post-list a {
+		display: grid;
+		grid-template-columns: 6.5rem 1fr;
+		gap: 1.2rem;
+		align-items: baseline;
+		padding: 1.05rem 0.4rem;
+		text-decoration: none;
+		border-radius: 10px;
+		border-bottom: 1px solid var(--line);
+		transition: background 0.2s ease;
+	}
+	.post-list li:last-child a {
+		border-bottom: none;
+	}
+	.post-list a:hover {
+		background: color-mix(in srgb, var(--c) 7%, transparent);
+	}
+	.date {
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		color: var(--tx-2);
+		white-space: nowrap;
+	}
+	.body {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.3rem 0.7rem;
+	}
+	.post-title {
+		font-weight: 600;
+		font-size: 1.08rem;
+		color: var(--tx);
+		background-image: linear-gradient(var(--c), var(--c));
+		background-repeat: no-repeat;
+		background-size: 0% 2px;
+		background-position: 0 100%;
+		padding-bottom: 2px;
+		transition: background-size 0.25s ease;
+	}
+	.post-list a:hover .post-title {
+		background-size: 100% 2px;
+	}
+	.tags {
+		display: inline-flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+	}
+	.tag {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		color: var(--c);
+	}
+
+	@media (max-width: 560px) {
+		.post-list a {
+			grid-template-columns: 1fr;
+			gap: 0.25rem;
+		}
+	}
+</style>
