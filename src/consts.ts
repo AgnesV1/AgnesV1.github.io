@@ -1,8 +1,7 @@
 // 站点全局信息：想改站名、简介、社交链接，只改这个文件就行。
 
-export const SITE_TITLE = 'Agnes';
-export const SITE_DESCRIPTION =
-	'Agnes 的个人小站：笔记、写作与摄影。Notes, writing & photography.';
+export const SITE_TITLE = 's_k_y_l_a_r_k_i_n_g ／ 荒腔走板';
+export const SITE_DESCRIPTION = 's_k_y_l_a_r_k_i_n_g';
 
 // 社交链接：留空字符串 '' 表示不显示对应图标。
 export const GITHUB_URL = 'https://github.com/AgnesV1';

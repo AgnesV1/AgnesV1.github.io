@@ -12,9 +12,33 @@ export async function getStaticPaths() {
 type Props = CollectionEntry<'writing'>;
 
 const piece = Astro.props;
-const { Content } = await render(piece);
+const { Content, headings } = await render(piece);
+
+// 与笔记页同款三栏：右侧文内目录（h2–h4），左侧按年份分组的作品时间轴
+const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4 && h.text.trim() !== '');
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const timeline = (await getCollection('writing'))
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.map((p) => ({
+		id: p.id,
+		base: p.id,
+		href: `/writing/${p.id}/`,
+		title: p.data.title,
+		lang: p.data.lang,
+		year: p.data.pubDate.getFullYear(),
+		mmdd: `${pad(p.data.pubDate.getMonth() + 1)}.${pad(p.data.pubDate.getDate())}`,
+	}));
 ---
 
-<BlogPost {...piece.data} backHref="/writing/" backLabelZh="回到写作" backLabelEn="All writing">
+<BlogPost
+	{...piece.data}
+	backHref="/writing/"
+	backLabelZh="回到夜莺颂"
+	backLabelEn="All fiction"
+	headings={tocHeadings}
+	timeline={timeline}
+	currentId={piece.id}
+>
 	<Content />
 </BlogPost>

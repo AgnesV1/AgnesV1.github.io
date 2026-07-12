@@ -1,0 +1,207 @@
+---
+// 列表页筛选条：标签点亮（命中任一即显示）+ 年份多选（横向可滚动），
+// 两组之间是「同时满足」。纯前端即时过滤，状态写入 URL（?tag=…&year=…）。
+// 列表条目需带 data-tags="a|b" 和 data-year="2026"。
+type Props = { tags: string[]; years: number[] };
+
+const { tags, years } = Astro.props;
+const showTags = tags.length > 0;
+const showYears = years.length > 1;
+---
+
+{
+	(showTags || showYears) && (
+		<div class="filterbar">
+			{showTags && (
+				<div class="row tags" role="group" aria-label="按标签筛选">
+					{tags.map((t, i) => (
+						<button class:list={['fchip', `c${i % 5}`]} data-tag={t} aria-pressed="false">
+							#{t}
+						</button>
+					))}
+				</div>
+			)}
+			{showYears && (
+				<div class="row years" role="group" aria-label="按年份筛选">
+					{years.map((y) => (
+						<button class="ychip" data-year={y} aria-pressed="false">
+							{y}
+						</button>
+					))}
+				</div>
+			)}
+			<button class="clear" hidden>
+				<span class="only-zh">清除筛选 ✕</span>
+				<span class="only-en">Clear filters ✕</span>
+			</button>
+			<p class="empty" hidden>
+				<span class="only-zh">没有符合筛选的文章。</span>
+				<span class="only-en">No posts match these filters.</span>
+			</p>
+		</div>
+	)
+}
+
+<style>
+	.filterbar {
+		display: flex;
+		flex-direction: column;
+		gap: 0.65rem;
+		margin: -1.2rem 0 1.6rem;
+	}
+	.row {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+	}
+	.row.tags {
+		flex-wrap: wrap;
+	}
+	/* 年份带：不换行，多了可以横向滑动，两端做淡出 */
+	.row.years {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		padding: 0.15rem 0.1rem;
+		scrollbar-width: none;
+		mask-image: linear-gradient(90deg, transparent, #000 0.8rem, #000 calc(100% - 0.8rem), transparent);
+	}
+	.row.years::-webkit-scrollbar {
+		display: none;
+	}
+
+	.fchip,
+	.ychip {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		padding: 0.22rem 0.65rem;
+		border-radius: 999px;
+		border: none;
+		cursor: pointer;
+		white-space: nowrap;
+		transition:
+			background 0.2s ease,
+			color 0.2s ease,
+			transform 0.05s ease;
+	}
+	.fchip:active,
+	.ychip:active {
+		transform: scale(0.95);
+	}
+	.fchip {
+		color: var(--c);
+		background: color-mix(in srgb, var(--c) 12%, transparent);
+	}
+	.fchip:hover {
+		background: color-mix(in srgb, var(--c) 22%, transparent);
+	}
+	.fchip.on {
+		color: var(--bg);
+		background: var(--c);
+	}
+	.ychip {
+		color: var(--tx-2);
+		background: var(--bg-soft);
+	}
+	.ychip:hover {
+		color: var(--tx);
+	}
+	.ychip.on {
+		color: var(--bg);
+		background: var(--sky);
+	}
+
+	.clear {
+		align-self: flex-start;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		padding: 0.1rem 0.15rem;
+		border: none;
+		background: none;
+		color: var(--tx-2);
+		cursor: pointer;
+		transition: color 0.2s ease;
+	}
+	.clear:hover {
+		color: var(--coral);
+	}
+	.empty {
+		color: var(--tx-2);
+		font-size: 0.92rem;
+		margin: 0.3rem 0 0;
+	}
+
+	/* 被筛掉的条目：!important 压过语言切换脚本写的行内 display */
+	:global(.post-list li.filter-hide) {
+		display: none !important;
+	}
+</style>
+
+<script>
+	const bar = document.querySelector<HTMLElement>('.filterbar');
+	const list = document.querySelector<HTMLElement>('.post-list');
+	if (bar && list) {
+		const tagBtns = [...bar.querySelectorAll<HTMLButtonElement>('.fchip')];
+		const yearBtns = [...bar.querySelectorAll<HTMLButtonElement>('.ychip')];
+		const clearBtn = bar.querySelector<HTMLButtonElement>('.clear');
+		const emptyMsg = bar.querySelector<HTMLElement>('.empty');
+		const activeTags = new Set<string>();
+		const activeYears = new Set<string>();
+
+		// 从 URL 恢复筛选状态（刷新、分享链接都保留）
+		const params = new URLSearchParams(location.search);
+		params.getAll('tag').forEach((t) => activeTags.add(t));
+		params.getAll('year').forEach((y) => activeYears.add(y));
+
+		// 用微任务推迟到本轮事件的所有监听器（含语言切换脚本）跑完后再数可见条目
+		const updateEmpty = () => {
+			queueMicrotask(() => {
+				const anyVisible = [...list.querySelectorAll<HTMLLIElement>(':scope > li')].some(
+					(li) => getComputedStyle(li).display !== 'none',
+				);
+				if (emptyMsg) emptyMsg.hidden = anyVisible;
+			});
+		};
+
+		const sync = () => {
+			tagBtns.forEach((b) => {
+				const on = activeTags.has(b.dataset.tag || '');
+				b.classList.toggle('on', on);
+				b.setAttribute('aria-pressed', String(on));
+			});
+			yearBtns.forEach((b) => {
+				const on = activeYears.has(b.dataset.year || '');
+				b.classList.toggle('on', on);
+				b.setAttribute('aria-pressed', String(on));
+			});
+			if (clearBtn) clearBtn.hidden = activeTags.size === 0 && activeYears.size === 0;
+
+			for (const li of list.querySelectorAll<HTMLLIElement>(':scope > li')) {
+				const liTags = (li.dataset.tags || '').split('|').filter(Boolean);
+				const okTag = activeTags.size === 0 || liTags.some((t) => activeTags.has(t));
+				const okYear = activeYears.size === 0 || activeYears.has(li.dataset.year || '');
+				li.classList.toggle('filter-hide', !(okTag && okYear));
+			}
+
+			const p = new URLSearchParams();
+			activeTags.forEach((t) => p.append('tag', t));
+			activeYears.forEach((y) => p.append('year', y));
+			const q = p.toString();
+			history.replaceState(null, '', q ? `?${q}` : location.pathname);
+			updateEmpty();
+		};
+
+		const toggle = (set: Set<string>, value: string) => {
+			set.has(value) ? set.delete(value) : set.add(value);
+			sync();
+		};
+		tagBtns.forEach((b) => b.addEventListener('click', () => toggle(activeTags, b.dataset.tag || '')));
+		yearBtns.forEach((b) => b.addEventListener('click', () => toggle(activeYears, b.dataset.year || '')));
+		clearBtn?.addEventListener('click', () => {
+			activeTags.clear();
+			activeYears.clear();
+			sync();
+		});
+		document.addEventListener('langchange', updateEmpty);
+		sync();
+	}
+</script>

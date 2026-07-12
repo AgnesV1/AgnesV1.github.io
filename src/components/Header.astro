@@ -3,58 +3,83 @@ import { GITHUB_URL, INSTAGRAM_URL, SITE_TITLE, YOUTUBE_URL } from '../consts';
 import HeaderLink from './HeaderLink.astro';
 import LangToggle from './LangToggle.astro';
 import ThemeToggle from './ThemeToggle.astro';
+
+// 站名是「英文名 ／ 中文名」的组合字标，中间的全角斜杠上色作点缀
+const [titleEn, titleZh] = SITE_TITLE.split('／').map((s) => s.trim());
 ---
 
 <header>
 	<nav>
-		<a class="logo" href="/">{SITE_TITLE}<span class="dot">.</span></a>
-		<div class="links">
-			<HeaderLink href="/">笔记 <span class="en-word">Notes</span></HeaderLink>
-			<HeaderLink href="/writing">写作 <span class="en-word">Writing</span></HeaderLink>
-			<HeaderLink href="/photos">摄影 <span class="en-word">Photos</span></HeaderLink>
-			<HeaderLink href="/about">About</HeaderLink>
+		<a class="logo" href="/">
+			{titleZh ? (
+				<>{titleEn} <span class="slash">／</span> {titleZh}</>
+			) : (
+				<>{SITE_TITLE}<span class="slash">.</span></>
+			)}
+		</a>
+		<!-- 桌面端平铺在页头里；小屏折叠进汉堡菜单面板 -->
+		<div class="menu" id="site-menu">
+			<div class="links">
+				<HeaderLink href="/"><span class="only-zh">致云雀</span><span class="only-en">Notes</span></HeaderLink>
+				<HeaderLink href="/writing"><span class="only-zh">夜莺颂</span><span class="only-en">Fiction</span></HeaderLink>
+				<HeaderLink href="/photos"><span class="only-zh">镜花水月</span><span class="only-en">Photos</span></HeaderLink>
+				<HeaderLink href="/about">About</HeaderLink>
+			</div>
+			<div class="social">
+				{
+					YOUTUBE_URL && (
+						<a href={YOUTUBE_URL} target="_blank" class="icon yt">
+							<span class="sr-only">YouTube 频道</span>
+							<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+								<path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.3 31.3 0 0 0 0 12c0 1.9.2 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1c.3-1.9.5-3.9.5-5.8s-.2-3.9-.5-5.8ZM9.6 15.6V8.4L15.8 12l-6.2 3.6Z" />
+							</svg>
+						</a>
+					)
+				}
+				{
+					INSTAGRAM_URL && (
+						<a href={INSTAGRAM_URL} target="_blank" class="icon ig">
+							<span class="sr-only">Instagram</span>
+							<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+								<rect x="2.5" y="2.5" width="19" height="19" rx="5.2" />
+								<circle cx="12" cy="12" r="4.4" />
+								<circle cx="17.6" cy="6.4" r="1.2" fill="currentColor" stroke="none" />
+							</svg>
+						</a>
+					)
+				}
+				{
+					GITHUB_URL && (
+						<a href={GITHUB_URL} target="_blank" class="icon gh">
+							<span class="sr-only">GitHub 主页</span>
+							<svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true">
+								<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+							</svg>
+						</a>
+					)
+				}
+				<a href="/rss.xml" class="icon rss">
+					<span class="sr-only">RSS 订阅</span>
+					<svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true">
+						<path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56Zm0 5.66v2.83a7.07 7.07 0 0 1 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9ZM6 16a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" />
+					</svg>
+				</a>
+			</div>
 		</div>
-		<div class="icons">
-			{
-				YOUTUBE_URL && (
-					<a href={YOUTUBE_URL} target="_blank" class="icon yt">
-						<span class="sr-only">YouTube 频道</span>
-						<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-							<path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.3 31.3 0 0 0 0 12c0 1.9.2 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1c.3-1.9.5-3.9.5-5.8s-.2-3.9-.5-5.8ZM9.6 15.6V8.4L15.8 12l-6.2 3.6Z" />
-						</svg>
-					</a>
-				)
-			}
-			{
-				INSTAGRAM_URL && (
-					<a href={INSTAGRAM_URL} target="_blank" class="icon ig">
-						<span class="sr-only">Instagram</span>
-						<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-							<rect x="2.5" y="2.5" width="19" height="19" rx="5.2" />
-							<circle cx="12" cy="12" r="4.4" />
-							<circle cx="17.6" cy="6.4" r="1.2" fill="currentColor" stroke="none" />
-						</svg>
-					</a>
-				)
-			}
-			{
-				GITHUB_URL && (
-					<a href={GITHUB_URL} target="_blank" class="icon gh">
-						<span class="sr-only">GitHub 主页</span>
-						<svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true">
-							<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
-						</svg>
-					</a>
-				)
-			}
-			<a href="/rss.xml" class="icon rss">
-				<span class="sr-only">RSS 订阅</span>
-				<svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true">
-					<path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56Zm0 5.66v2.83a7.07 7.07 0 0 1 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9ZM6 16a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" />
-				</svg>
-			</a>
+		<div class="controls">
 			<LangToggle />
 			<ThemeToggle />
+			<button id="menu-btn" class="menu-btn icon" aria-label="菜单" aria-expanded="false" aria-controls="site-menu">
+				<svg class="i-open" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+					<line x1="4" y1="6.5" x2="20" y2="6.5"></line>
+					<line x1="4" y1="12" x2="20" y2="12"></line>
+					<line x1="4" y1="17.5" x2="20" y2="17.5"></line>
+				</svg>
+				<svg class="i-close" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+					<line x1="6" y1="6" x2="18" y2="18"></line>
+					<line x1="18" y1="6" x2="6" y2="18"></line>
+				</svg>
+			</button>
 		</div>
 	</nav>
 </header>
@@ -66,21 +91,29 @@ import ThemeToggle from './ThemeToggle.astro';
 	nav {
 		max-width: 44rem;
 		margin-inline: auto;
-		padding: 1.4rem 1.25rem;
+		padding: 1.2rem 1.25rem 1rem;
 		display: flex;
 		align-items: center;
-		gap: 1.5rem;
+		flex-wrap: wrap;
+		row-gap: 0.55rem;
 	}
+	/* 站名较长，独占页头第一行；导航和图标排在第二行 */
 	.logo {
+		flex-basis: 100%;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 1.3rem;
-		letter-spacing: -0.02em;
+		font-size: clamp(1.05rem, 4vw, 1.35rem);
+		letter-spacing: -0.01em;
+		white-space: nowrap;
 		color: var(--tx);
 		text-decoration: none;
 	}
-	.logo .dot {
+	.logo .slash {
 		color: var(--coral);
+	}
+	/* 桌面端 .menu 不产生盒子，links / social 直接排进页头一行 */
+	.menu {
+		display: contents;
 	}
 	.links {
 		display: flex;
@@ -89,12 +122,13 @@ import ThemeToggle from './ThemeToggle.astro';
 		margin-left: auto;
 		white-space: nowrap;
 	}
-	.links .en-word {
-		font-family: var(--font-mono);
-		font-size: 0.8em;
-		opacity: 0.75;
+	.social {
+		display: flex;
+		align-items: center;
+		gap: 0.15rem;
+		margin-left: 1.1rem;
 	}
-	.icons {
+	.controls {
 		display: flex;
 		align-items: center;
 		gap: 0.15rem;
@@ -126,17 +160,89 @@ import ThemeToggle from './ThemeToggle.astro';
 		color: var(--sun);
 		background: color-mix(in srgb, var(--sun) 14%, transparent);
 	}
+	.menu-btn {
+		display: none;
+		border: none;
+		background: none;
+		cursor: pointer;
+	}
+	.menu-btn:hover {
+		color: var(--tx);
+		background: color-mix(in srgb, var(--sky) 14%, transparent);
+	}
+	.menu-btn .i-close {
+		display: none;
+	}
 
+	/* 小屏：页头只留 logo + 语言/主题切换 + 汉堡按钮，菜单折叠成面板 */
 	@media (max-width: 640px) {
-		nav {
-			gap: 1rem;
+		.menu-btn {
+			display: flex;
+		}
+		.controls {
+			margin-left: auto;
+		}
+		.menu {
+			display: none;
+			/* 排在 logo 和右侧按钮组之后，展开时占满一整行、把内容往下推 */
+			order: 10;
+			flex-basis: 100%;
+			min-width: 100%;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.8rem;
+			margin-top: 1rem;
+			padding-top: 0.9rem;
+			border-top: 1px solid var(--line);
+		}
+		nav.open .menu {
+			display: flex;
+			animation: menu-in 0.22s ease;
+		}
+		nav.open .menu-btn .i-open {
+			display: none;
+		}
+		nav.open .menu-btn .i-close {
+			display: block;
 		}
 		.links {
-			gap: 0.8rem;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.35rem;
+			margin-left: 0;
 		}
-		/* 小屏隐藏导航里的英文副词，避免换行 */
-		.links .en-word {
-			display: none;
+		/* 面板里的链接加大，方便手指点按 */
+		.links :global(a) {
+			font-size: 1.05rem;
+			padding: 0.3rem 0.1rem;
+		}
+		.social {
+			margin-left: -0.3rem;
+			gap: 0.4rem;
+		}
+	}
+	@keyframes menu-in {
+		from {
+			opacity: 0;
+			transform: translateY(-6px);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		nav.open .menu {
+			animation: none;
 		}
 	}
 </style>
+
+<script>
+	const btn = document.getElementById('menu-btn');
+	const nav = btn?.closest('nav');
+	const setOpen = (open: boolean) => {
+		nav?.classList.toggle('open', open);
+		btn?.setAttribute('aria-expanded', String(open));
+	};
+	btn?.addEventListener('click', () => setOpen(!nav?.classList.contains('open')));
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') setOpen(false);
+	});
+</script>

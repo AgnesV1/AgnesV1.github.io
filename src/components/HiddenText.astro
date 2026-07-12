@@ -1,0 +1,283 @@
+---
+// 防剧透文字的运行时（配合 scripts/rehype-hidden-text.mjs 生成的 <hidden-text>）：
+// 隐藏段渲染成一条随行宽闪烁的星尘光带（夜间白色碎钻、日间五彩细尘），
+// 点击展开并播放"星尘消散"动画；点空白处或另一段时自动收起（互斥）；
+// 无论开合，复制/剪切/拖拽拿到的都只有 █ 方块。
+// 挂在 BlogPost 布局里，页面上没有 <hidden-text> 时脚本直接退出、不建 canvas。
+---
+
+<style is:global>
+	/* 占位乱码保持透明：行宽、换行由它撑起，视觉上只见星尘 */
+	hidden-text {
+		white-space: pre-wrap;
+		cursor: pointer;
+		border-radius: 4px;
+		padding: 0 0.15em;
+		color: transparent;
+		transition:
+			background 0.3s ease,
+			color 0.3s ease;
+		-webkit-tap-highlight-color: transparent;
+	}
+	hidden-text:not(.open):hover {
+		background: color-mix(in srgb, var(--lav) 8%, transparent);
+	}
+	hidden-text.open {
+		background: color-mix(in srgb, var(--lav) 5%, transparent);
+		color: var(--tx);
+		text-decoration: underline dotted color-mix(in srgb, var(--lav) 55%, transparent);
+		text-underline-offset: 0.3em;
+	}
+	hidden-text:focus-visible {
+		outline: 2px solid var(--lav);
+		outline-offset: 2px;
+	}
+	hidden-text::selection {
+		background: color-mix(in srgb, var(--lav) 30%, transparent);
+	}
+	hidden-text:not(.open)::selection {
+		color: transparent;
+	}
+</style>
+
+<script>
+	const dec = (b64: string) =>
+		new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
+	// CJK 区 + 中文常用全角标点算"宽字符"，换成随机汉字；其余换随机字母
+	const WIDE = (c: string) => c.charCodeAt(0) >= 0x2e80 || '—…“”‘’'.includes(c);
+	const rCJK = () => String.fromCharCode(0x4e00 + Math.floor(Math.random() * 20902));
+	const rABC = () => String.fromCharCode(97 + Math.floor(Math.random() * 26));
+	const scrChar = (c: string) => (c === '\n' ? '\n' : WIDE(c) ? rCJK() : rABC());
+	const toBlocks = (s: string) => [...s].map((c) => (c === '\n' ? '\n' : '█')).join('');
+
+	type HT = HTMLElement & {
+		_orig: string[];
+		_open: boolean;
+		_dissolveStart: number;
+		_dots?: Dot[][];
+		_sig?: string;
+	};
+	type Dot = {
+		fx: number; fy: number; r: number; base: number; speed: number; phase: number;
+		hue: number; vx: number; vy: number; amp: number; wx: number; wy: number;
+		px: number; py: number;
+	};
+
+	const items = [...document.querySelectorAll<HT>('hidden-text')];
+	if (items.length > 0) {
+		let openEl: HT | null = null;
+
+		items.forEach((el) => {
+			el._orig = [...dec(el.dataset.t || '')];
+			el.setAttribute('role', 'button');
+			el.setAttribute('tabindex', '0');
+			el.title = '点击显示，再点隐藏';
+			hide(el);
+		});
+
+		function hide(el: HT) {
+			el._open = false;
+			el._dissolveStart = 0;
+			el.classList.remove('open');
+			el.setAttribute('aria-expanded', 'false');
+			el.textContent = el._orig.map(scrChar).join('');
+			if (openEl === el) openEl = null;
+		}
+		function reveal(el: HT) {
+			if (openEl && openEl !== el) hide(openEl);
+			el._open = true;
+			// 星尘消散动画（系统设置了减少动态就直接显示）
+			el._dissolveStart = matchMedia('(prefers-reduced-motion: reduce)').matches
+				? 0
+				: performance.now();
+			el.classList.add('open');
+			el.setAttribute('aria-expanded', 'true');
+			el.textContent = el._orig.join('');
+			openEl = el;
+		}
+
+		// 点击：段内开合；点其他区域自动收起
+		document.addEventListener('click', (e) => {
+			const sel = document.getSelection();
+			if (sel && !sel.isCollapsed) return; // 用户在拖选文字，不当作点击
+			const ht = (e.target as HTMLElement).closest?.('hidden-text') as HT | null;
+			if (ht) (ht._open ? hide : reveal)(ht);
+			else if (openEl) hide(openEl);
+		});
+		document.addEventListener('keydown', (e) => {
+			const ht = (e.target as HTMLElement).closest?.('hidden-text') as HT | null;
+			if (ht && (e.key === 'Enter' || e.key === ' ')) {
+				e.preventDefault();
+				(ht._open ? hide : reveal)(ht);
+			}
+		});
+
+		// —— 星尘粒子层：隐藏段的每一行渲染成一条闪烁的尘点光带 ——
+		const canvas = document.createElement('canvas');
+		canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:5';
+		canvas.setAttribute('aria-hidden', 'true');
+		document.body.appendChild(canvas);
+		const ctx = canvas.getContext('2d')!;
+		let dpr = 1;
+		function sizeCanvas() {
+			dpr = window.devicePixelRatio || 1;
+			canvas.width = innerWidth * dpr;
+			canvas.height = innerHeight * dpr;
+			canvas.style.width = innerWidth + 'px';
+			canvas.style.height = innerHeight + 'px';
+		}
+		sizeCanvas();
+		addEventListener('resize', sizeCanvas);
+
+		const DENSITY = 0.75; // 每像素行宽的尘点数量（碎钻感：密而小）
+		const DISSOLVE_MS = 1300; // 点开时星尘消散的时长（慢慢散开）
+		const PALETTE = ['--coral', '--mint', '--lav', '--sun', '--sky']; // 日间彩色星尘
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+		// 尘点存行内相对坐标，窗口缩放、排版变化时按当前行框换算
+		function buildDots(el: HT, rects: DOMRect[], sig: string) {
+			el._sig = sig;
+			el._dots = rects.map((r) =>
+				Array.from({ length: Math.max(10, Math.round(r.width * DENSITY)) }, () => ({
+					fx: Math.random(),
+					// 均匀铺满整行高度，星尘更松散
+					fy: 0.06 + Math.random() * 0.88,
+					r: 0.4 + Math.random() * 0.7 + (Math.random() < 0.05 ? 0.6 : 0),
+					base: 0.55 + Math.random() * 0.45,
+					speed: 0.8 + Math.random() * 2.6,
+					phase: Math.random() * Math.PI * 2,
+					hue: Math.floor(Math.random() * PALETTE.length), // 日间模式的颜色索引
+					vx: (Math.random() - 0.5) * 64, // 消散时的飞散速度（px/s）
+					vy: -6 - Math.random() * 44, // 略微向上飘
+					amp: 2 + Math.random() * 3.5, // 游动半径（px）
+					wx: 0.7 + Math.random() * 1.8, // 游动角速度（rad/s）
+					wy: 0.7 + Math.random() * 1.8,
+					px: Math.random() * Math.PI * 2, // 游动相位
+					py: Math.random() * Math.PI * 2,
+				})),
+			);
+		}
+		function drawDots(now: number) {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			const root = document.documentElement;
+			const theme = root.dataset.theme;
+			const isDark =
+				theme === 'dark' ||
+				(theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+			const ink = getComputedStyle(document.body).color;
+			const rootStyle = getComputedStyle(root);
+			const palette = PALETTE.map((v) => rootStyle.getPropertyValue(v).trim() || ink);
+			items.forEach((el) => {
+				let fade = 0; // 0 = 正常隐藏态；(0,1) = 消散进行中
+				if (el._open) {
+					if (!el._dissolveStart) return;
+					fade = (now - el._dissolveStart) / DISSOLVE_MS;
+					if (fade >= 1) {
+						el._dissolveStart = 0;
+						return;
+					}
+				}
+				const rects = [...el.getClientRects()];
+				if (!rects.length) return;
+				// 只画视口内的隐藏段
+				if (rects[rects.length - 1].bottom < 0 || rects[0].top > innerHeight) return;
+				const sig = rects.map((r) => Math.round(r.width)).join(',');
+				if (!el._dots || sig !== el._sig) buildDots(el, rects, sig);
+				const sec = now / 1000;
+				rects.forEach((rect, i) => {
+					(el._dots![i] || []).forEach((d) => {
+						const tw = reduce ? 1 : 0.55 + 0.45 * Math.abs(Math.sin(sec * d.speed + d.phase));
+						let x = rect.left + d.fx * rect.width;
+						let y = rect.top + d.fy * rect.height;
+						if (!reduce) {
+							// 每个点沿各自的椭圆轨迹缓慢游动
+							x += Math.sin(sec * d.wx + d.px) * d.amp;
+							y += Math.cos(sec * d.wy + d.py) * d.amp * 0.7;
+						}
+						let a = d.base * tw;
+						if (fade > 0) {
+							// 星尘消散：向四周飘散、上浮，同时淡出
+							const t = fade * (DISSOLVE_MS / 1000);
+							x += d.vx * t;
+							y += d.vy * t;
+							a *= Math.pow(1 - fade, 1.6);
+						}
+						ctx.fillStyle = isDark ? ink : palette[d.hue];
+						ctx.globalAlpha = a;
+						// 小方点视觉上和圆点无异，绘制开销低得多
+						const s = d.r * 2 * dpr;
+						ctx.fillRect((x - d.r) * dpr, (y - d.r) * dpr, s, s);
+					});
+				});
+			});
+			ctx.globalAlpha = 1;
+		}
+		// rAF 负责流畅动画；低频 interval 兜底（rAF 被节流的环境里星尘依然存在）
+		const loop = (now: number) => {
+			drawDots(now || 0);
+			requestAnimationFrame(loop);
+		};
+		loop(0);
+		setInterval(() => drawDots(performance.now()), 400);
+
+		// 复制拦截：隐藏段无论开合，复制到的都是 █（保留换行）
+		function fragText(node: Node): string {
+			let out = '';
+			node.childNodes.forEach((ch) => {
+				if (ch.nodeType === 3) out += ch.nodeValue;
+				else if (ch.nodeType === 1) {
+					const el = ch as HTMLElement;
+					if (el.tagName === 'BR') {
+						out += '\n';
+						return;
+					}
+					out += fragText(el);
+					if (/^(P|DIV|LI|UL|OL|H[1-6]|SECTION|BLOCKQUOTE)$/.test(el.tagName)) out += '\n';
+				}
+			});
+			return out;
+		}
+		function onCopy(e: ClipboardEvent) {
+			const t = e.target as HTMLElement;
+			if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT')) return;
+			const sel = document.getSelection();
+			if (!sel || sel.isCollapsed) return;
+			const range = sel.getRangeAt(0);
+			const anc = range.commonAncestorContainer;
+			const insideHT = (anc.nodeType === 1 ? (anc as HTMLElement) : anc.parentElement)?.closest(
+				'hidden-text',
+			);
+			const frag = range.cloneContents();
+			if (!insideHT && !frag.querySelector('hidden-text')) return;
+			let text: string;
+			if (insideHT) text = toBlocks(sel.toString());
+			else {
+				frag
+					.querySelectorAll('hidden-text')
+					.forEach((n) => (n.textContent = toBlocks(n.textContent || '')));
+				text = fragText(frag);
+			}
+			e.clipboardData?.setData('text/plain', text);
+			e.preventDefault();
+		}
+		document.addEventListener('copy', onCopy);
+		document.addEventListener('cut', onCopy);
+
+		// 禁止把选中的隐藏文字拖拽出去
+		document.addEventListener('dragstart', (e) => {
+			const t = e.target as HTMLElement;
+			if (t.closest?.('hidden-text')) {
+				e.preventDefault();
+				return;
+			}
+			const sel = document.getSelection();
+			if (
+				sel &&
+				!sel.isCollapsed &&
+				sel.getRangeAt(0).cloneContents().querySelector('hidden-text')
+			) {
+				e.preventDefault();
+			}
+		});
+	}
+</script>

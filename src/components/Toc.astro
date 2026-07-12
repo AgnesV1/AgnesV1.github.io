@@ -1,0 +1,265 @@
+---
+// 文章页目录：宽屏时是右侧悬浮栏，小屏时是右下角浮标 + 底部抽屉。
+// 数据来自 Markdown 标题（h2–h4）：最浅一级作为顶层条目并按五色循环着色，
+// 更深的标题缩进一层、颜色跟随所属顶层条目。
+type Heading = { depth: number; slug: string; text: string };
+type Props = { headings: Heading[] };
+
+const { headings } = Astro.props;
+const minDepth = Math.min(...headings.map((h) => h.depth));
+let topIdx = -1;
+const items = headings.map((h) => {
+	if (h.depth === minDepth) topIdx++;
+	return { slug: h.slug, text: h.text, sub: h.depth > minDepth, color: Math.max(topIdx, 0) % 5 };
+});
+---
+
+<aside class="toc" aria-label="本页目录">
+	<p class="toc-head"><span class="only-zh">本页目录</span><span class="only-en">On this page</span></p>
+	<ul>
+		{
+			items.map((it) => (
+				<li class:list={[`c${it.color}`, { sub: it.sub }]}>
+					<a class="toc-link" href={`#${it.slug}`} data-slug={it.slug}>
+						{it.text}
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</aside>
+
+<button class="toc-fab" aria-label="打开目录" aria-expanded="false" aria-controls="toc-drawer">
+	<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+		<circle cx="4.2" cy="6" r="0.6" fill="currentColor" stroke="none"></circle>
+		<circle cx="4.2" cy="12" r="0.6" fill="currentColor" stroke="none"></circle>
+		<circle cx="4.2" cy="18" r="0.6" fill="currentColor" stroke="none"></circle>
+		<line x1="9" y1="6" x2="20" y2="6"></line>
+		<line x1="9" y1="12" x2="20" y2="12"></line>
+		<line x1="9" y1="18" x2="20" y2="18"></line>
+	</svg>
+</button>
+<div class="toc-backdrop"></div>
+<div class="toc-drawer" id="toc-drawer" role="dialog" aria-label="目录 Contents">
+	<p class="toc-head"><span class="only-zh">目录</span><span class="only-en">Contents</span></p>
+	<ul>
+		{
+			items.map((it) => (
+				<li class:list={[`c${it.color}`, { sub: it.sub }]}>
+					<a class="toc-link" href={`#${it.slug}`} data-slug={it.slug}>
+						{it.text}
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</div>
+
+<style>
+	.toc-head {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.09em;
+		text-transform: uppercase;
+		color: var(--tx-2);
+		margin: 0 0 0.7rem;
+	}
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	li {
+		margin: 0;
+	}
+	li.sub {
+		padding-left: 0.95rem;
+	}
+	.toc-link {
+		position: relative;
+		display: block;
+		padding: 0.28rem 0 0.28rem 1.05rem;
+		font-size: 0.84rem;
+		line-height: 1.5;
+		color: var(--tx-2);
+		text-decoration: none;
+		transition: color 0.2s ease;
+	}
+	.toc-link::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0.63rem;
+		width: 0.42rem;
+		height: 0.42rem;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--tx-2) 26%, transparent);
+		transition:
+			background 0.2s ease,
+			transform 0.2s ease;
+	}
+	li.sub .toc-link::before {
+		width: 0.3rem;
+		height: 0.3rem;
+		top: 0.69rem;
+	}
+	.toc-link:hover {
+		color: var(--tx);
+	}
+	.toc-link:hover::before {
+		background: color-mix(in srgb, var(--c) 55%, transparent);
+	}
+	.toc-link.active {
+		color: var(--tx);
+		font-weight: 500;
+	}
+	.toc-link.active::before {
+		background: var(--c);
+		transform: scale(1.3);
+	}
+
+	/* --- 宽屏：右侧悬浮栏 --- */
+	.toc {
+		display: none;
+	}
+	@media (min-width: 1160px) {
+		.toc {
+			display: block;
+			position: sticky;
+			top: 2.2rem;
+			width: 13rem;
+			max-height: calc(100vh - 4.5rem);
+			overflow-y: auto;
+			margin-top: 2.4rem;
+			padding: 0.2rem 0.4rem 1rem;
+			scrollbar-width: thin;
+			scrollbar-color: var(--line) transparent;
+		}
+	}
+
+	/* --- 小屏：右下角浮标 + 底部抽屉 --- */
+	.toc-fab {
+		position: fixed;
+		right: 1.1rem;
+		bottom: 1.3rem;
+		z-index: 40;
+		width: 2.9rem;
+		height: 2.9rem;
+		border-radius: 50%;
+		border: 1px solid var(--line);
+		background: var(--bg);
+		color: var(--tx-2);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+		transition:
+			color 0.2s ease,
+			background 0.2s ease;
+	}
+	.toc-fab:hover {
+		color: var(--sky);
+	}
+	.toc-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 41;
+		background: rgb(0 0 0 / 0.32);
+		opacity: 0;
+		visibility: hidden;
+		transition:
+			opacity 0.25s ease,
+			visibility 0.25s ease;
+	}
+	.toc-backdrop.open {
+		opacity: 1;
+		visibility: visible;
+	}
+	.toc-drawer {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 42;
+		background: var(--bg);
+		border-top: 1px solid var(--line);
+		border-radius: 18px 18px 0 0;
+		padding: 1.1rem 1.4rem calc(1.3rem + env(safe-area-inset-bottom));
+		max-height: 62dvh;
+		overflow-y: auto;
+		transform: translateY(103%);
+		visibility: hidden;
+		transition:
+			transform 0.3s ease,
+			visibility 0.3s ease;
+	}
+	.toc-drawer.open {
+		transform: none;
+		visibility: visible;
+	}
+	.toc-drawer .toc-link {
+		font-size: 0.95rem;
+		padding-block: 0.42rem;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.toc-backdrop,
+		.toc-drawer {
+			transition: none;
+		}
+	}
+	/* 宽屏已有右侧目录栏，浮标和抽屉整组隐藏（放在最后，压过上面的基础样式） */
+	@media (min-width: 1160px) {
+		.toc-fab,
+		.toc-backdrop,
+		.toc-drawer {
+			display: none;
+		}
+	}
+</style>
+
+<script>
+	// 滚动高亮：正文读到哪一节，目录里对应条目亮起（侧栏和抽屉同步）
+	const links = [...document.querySelectorAll<HTMLAnchorElement>('.toc-link')];
+	if (links.length > 0) {
+		const slugs = [...new Set(links.map((l) => l.dataset.slug || ''))];
+		const targets = slugs
+			.map((s) => document.getElementById(s))
+			.filter((el): el is HTMLElement => el !== null);
+		const update = () => {
+			// 当前小节 = 最后一个已滚过视口上沿附近的标题
+			let current = targets[0]?.id;
+			for (const t of targets) {
+				if (t.getBoundingClientRect().top <= 140) current = t.id;
+			}
+			links.forEach((l) => l.classList.toggle('active', l.dataset.slug === current));
+		};
+		// 任一标题越过视口上下边界都会触发一次重算，不依赖 scroll 事件
+		const observer = new IntersectionObserver(update, {
+			rootMargin: '-140px 0px -55% 0px',
+			threshold: [0, 1],
+		});
+		targets.forEach((t) => observer.observe(t));
+		addEventListener('scroll', update, { passive: true });
+		update();
+	}
+
+	// 底部抽屉开合
+	const fab = document.querySelector<HTMLButtonElement>('.toc-fab');
+	const drawer = document.getElementById('toc-drawer');
+	const backdrop = document.querySelector<HTMLElement>('.toc-backdrop');
+	const setOpen = (open: boolean) => {
+		drawer?.classList.toggle('open', open);
+		backdrop?.classList.toggle('open', open);
+		fab?.setAttribute('aria-expanded', String(open));
+		document.body.style.overflow = open ? 'hidden' : '';
+	};
+	fab?.addEventListener('click', () => setOpen(!drawer?.classList.contains('open')));
+	backdrop?.addEventListener('click', () => setOpen(false));
+	drawer?.addEventListener('click', (e) => {
+		if ((e.target as HTMLElement).closest('a')) setOpen(false);
+	});
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') setOpen(false);
+	});
+</script>

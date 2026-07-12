@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
+import FilterBar from '../components/FilterBar.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
@@ -16,6 +17,10 @@ const postMeta = (id: string) => {
 	const base = isEn ? id.slice(0, -3) : id;
 	return { base, href: isEn ? `/blog/${base}/en/` : `/blog/${id}/` };
 };
+
+// 筛选条数据：出现过的所有标签（字母序）+ 年份（新到旧）
+const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.localeCompare(b, 'zh'));
+const allYears = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].sort((a, b) => b - a);
 ---
 
 <!doctype html>
@@ -27,8 +32,7 @@ const postMeta = (id: string) => {
 		<Header />
 		<main>
 			<section class="hero">
-				<h1 class="only-zh">你好，我是 Agnes <span class="wave">👋</span></h1>
-				<h1 class="only-en">Hi, I'm Agnes <span class="wave">👋</span></h1>
+				<h1>s_k_y_l_a_r_k_i_n_g</h1>
 				<p class="intro only-zh">
 					在这里记<mark class="m-coral">笔记</mark>、写<a href="/writing"
 						><mark class="m-mint">故事</mark></a
@@ -41,13 +45,21 @@ const postMeta = (id: string) => {
 				</p>
 			</section>
 
+			<FilterBar tags={allTags} years={allYears} />
+
 			<section class="posts">
 				<ul class="post-list">
 					{
 						posts.map((post, i) => {
 							const { base, href } = postMeta(post.id);
 							return (
-								<li class={`c${i % 5}`} data-lang={post.data.lang} data-base={base}>
+								<li
+									class={`c${i % 5}`}
+									data-lang={post.data.lang}
+									data-base={base}
+									data-tags={post.data.tags.join('|')}
+									data-year={post.data.pubDate.getFullYear()}
+								>
 									<a href={href}>
 										<span class="date">
 											<FormattedDate date={post.data.pubDate} />
@@ -107,12 +119,11 @@ const postMeta = (id: string) => {
 		margin: 2.5rem 0 3rem;
 	}
 	.hero h1 {
-		font-size: 2rem;
-		letter-spacing: -0.02em;
+		/* 站名较长：小屏自动缩，最长一行也不换行 */
+		font-size: clamp(1.4rem, 7vw, 2rem);
+		letter-spacing: -0.01em;
+		white-space: nowrap;
 		margin: 0 0 0.8rem;
-	}
-	.wave {
-		display: inline-block;
 	}
 	.intro {
 		font-size: 1.05rem;

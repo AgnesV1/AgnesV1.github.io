@@ -25,9 +25,36 @@ export async function getStaticPaths() {
 type Props = { post: CollectionEntry<'blog'>; translationHref?: string };
 
 const { post, translationHref } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
+
+// 右侧目录：取 h2–h4（有的笔记直接用 #### 做小节），Toc 组件按最浅一级分层
+const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4 && h.text.trim() !== '');
+
+// 左侧时间轴：全部笔记按时间倒序，年份分组在组件里做
+const pad = (n: number) => String(n).padStart(2, '0');
+const timeline = (await getCollection('blog'))
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.map((p) => {
+		const isEn = p.id.endsWith('.en');
+		const base = isEn ? p.id.slice(0, -3) : p.id;
+		return {
+			id: p.id,
+			base,
+			href: isEn ? `/blog/${base}/en/` : `/blog/${p.id}/`,
+			title: p.data.title,
+			lang: p.data.lang,
+			year: p.data.pubDate.getFullYear(),
+			mmdd: `${pad(p.data.pubDate.getMonth() + 1)}.${pad(p.data.pubDate.getDate())}`,
+		};
+	});
 ---
 
-<BlogPost {...post.data} translationHref={translationHref}>
+<BlogPost
+	{...post.data}
+	translationHref={translationHref}
+	headings={tocHeadings}
+	timeline={timeline}
+	currentId={post.id}
+>
 	<Content />
 </BlogPost>

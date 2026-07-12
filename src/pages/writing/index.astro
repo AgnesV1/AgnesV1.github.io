@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
+import FilterBar from '../../components/FilterBar.astro';
 import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
@@ -9,21 +10,27 @@ import { SITE_TITLE } from '../../consts';
 const pieces = (await getCollection('writing')).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+
+// 筛选条数据：标签（字母序）+ 年份（新到旧）；都不够多时筛选条自动不渲染
+const allTags = [...new Set(pieces.flatMap((p) => p.data.tags))].sort((a, b) => a.localeCompare(b, 'zh'));
+const allYears = [...new Set(pieces.map((p) => p.data.pubDate.getFullYear()))].sort((a, b) => b - a);
 ---
 
 <!doctype html>
 <html lang="zh-CN">
 	<head>
-		<BaseHead title={`写作 Writing · ${SITE_TITLE}`} description="虚构写作：短篇与片段。Fiction: short stories & fragments." />
+		<BaseHead title={`夜莺颂 Fiction · ${SITE_TITLE}`} description="虚构写作：短篇与片段。Fiction: short stories & fragments." />
 	</head>
 	<body>
 		<Header />
 		<main>
 			<section class="hero">
-				<h1>写作 <span class="en-word">Writing</span></h1>
+				<h1><span class="only-zh">夜莺颂</span><span class="only-en">Fiction</span></h1>
 				<p class="intro only-zh">一些虚构：短篇与片段。</p>
 				<p class="intro only-en">Fiction: short stories & fragments.</p>
 			</section>
+
+			<FilterBar tags={allTags} years={allYears} />
 
 			<section class="posts">
 				{
@@ -35,7 +42,11 @@ const pieces = (await getCollection('writing')).sort(
 					) : (
 						<ul class="post-list">
 							{pieces.map((piece, i) => (
-								<li class={`c${i % 5}`}>
+								<li
+									class={`c${i % 5}`}
+									data-tags={piece.data.tags.join('|')}
+									data-year={piece.data.pubDate.getFullYear()}
+								>
 									<a href={`/writing/${piece.id}/`}>
 										<span class="date">
 											<FormattedDate date={piece.data.pubDate} />

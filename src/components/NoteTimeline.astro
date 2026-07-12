@@ -1,0 +1,164 @@
+---
+// 文章页左侧（仅宽屏显示）：按年份分组的浅色时间轴。
+// 当前文章亮色标出；中英配对的笔记按当前语言只显示一版（沿用首页逻辑）。
+type Item = {
+	id: string;
+	base: string;
+	href: string;
+	title: string;
+	lang: string;
+	year: number;
+	mmdd: string;
+};
+type Props = { items: Item[]; currentId?: string };
+
+const { items, currentId } = Astro.props;
+const years = [...new Set(items.map((i) => i.year))];
+---
+
+<aside class="tl" aria-label="时间轴">
+	<div class="groups">
+		{
+			years.map((year) => (
+				<section>
+					<p class="year">{year}</p>
+					<ul>
+						{items
+							.filter((i) => i.year === year)
+							.map((i) => (
+								<li
+									class:list={{ current: i.id === currentId }}
+									data-lang={i.lang}
+									data-base={i.base}
+								>
+									<a href={i.href}>
+										<span class="d">{i.mmdd}</span>
+										<span class="t">{i.title}</span>
+									</a>
+								</li>
+							))}
+					</ul>
+				</section>
+			))
+		}
+	</div>
+</aside>
+
+<style>
+	/* 默认隐藏，只在宽屏三栏布局下出现 */
+	.tl {
+		display: none;
+	}
+	@media (min-width: 1160px) {
+		.tl {
+			display: block;
+			position: sticky;
+			top: 2.2rem;
+			width: 13rem;
+			max-height: calc(100vh - 4.5rem);
+			overflow-y: auto;
+			margin-top: 2.4rem;
+			padding: 0.2rem 0.4rem 1rem;
+			scrollbar-width: thin;
+			scrollbar-color: var(--line) transparent;
+		}
+	}
+
+	.groups {
+		border-left: 1px solid var(--line);
+		padding-left: 0.95rem;
+		margin-left: 0.2rem;
+	}
+	.year {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		color: var(--tx-2);
+		margin: 1.1rem 0 0.25rem;
+	}
+	section:first-child .year {
+		margin-top: 0.1rem;
+	}
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	li {
+		position: relative;
+		margin: 0;
+	}
+	/* 时间轴上的小圆点，压在左边的竖线上 */
+	li::before {
+		content: '';
+		position: absolute;
+		left: calc(-0.95rem - 3.5px);
+		top: 0.62rem;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--line);
+		transition: background 0.2s ease;
+	}
+	li.current::before {
+		background: var(--coral);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--coral) 22%, transparent);
+	}
+	li a {
+		display: block;
+		padding: 0.24rem 0;
+		font-size: 0.82rem;
+		line-height: 1.5;
+		color: var(--tx-2);
+		text-decoration: none;
+		transition: color 0.2s ease;
+	}
+	li a:hover {
+		color: var(--tx);
+	}
+	li:hover::before {
+		background: color-mix(in srgb, var(--coral) 55%, transparent);
+	}
+	li.current a .t {
+		color: var(--tx);
+		font-weight: 500;
+	}
+	.d {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		margin-right: 0.4rem;
+		opacity: 0.85;
+	}
+</style>
+
+<script>
+	// 中英配对：同一篇的两版只显示一版。含当前文章的组固定显示当前版，
+	// 其余组按页头语言选择，都没有匹配就显示第一版。
+	const tl = document.querySelector('.tl');
+	if (tl) {
+		const apply = () => {
+			const lang = document.documentElement.dataset.lang || 'zh';
+			const items = [...tl.querySelectorAll<HTMLLIElement>('li')];
+			const groups = new Map<string, HTMLLIElement[]>();
+			items.forEach((li) => {
+				const base = li.dataset.base || '';
+				groups.set(base, [...(groups.get(base) || []), li]);
+			});
+			groups.forEach((group) => {
+				if (group.length === 1) {
+					group[0].style.display = '';
+					return;
+				}
+				const preferred =
+					group.find((li) => li.classList.contains('current')) ||
+					group.find((li) => li.dataset.lang === lang) ||
+					group[0];
+				group.forEach((li) => {
+					li.style.display = li === preferred ? '' : 'none';
+				});
+			});
+		};
+		apply();
+		document.addEventListener('langchange', apply);
+	}
+</script>

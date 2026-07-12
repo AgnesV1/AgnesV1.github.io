@@ -5,6 +5,9 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
+import HiddenText from '../components/HiddenText.astro';
+import NoteTimeline from '../components/NoteTimeline.astro';
+import Toc from '../components/Toc.astro';
 
 type Props = CollectionEntry<'blog'>['data'] & {
 	// 有配对翻译时传入对应 URL，页头语言切换会直接跳过去
@@ -13,6 +16,18 @@ type Props = CollectionEntry<'blog'>['data'] & {
 	backHref?: string;
 	backLabelZh?: string;
 	backLabelEn?: string;
+	// 笔记栏目专用：传了才渲染两侧栏（右侧文内目录 + 左侧时间轴）和小屏目录抽屉
+	headings?: { depth: number; slug: string; text: string }[];
+	timeline?: {
+		id: string;
+		base: string;
+		href: string;
+		title: string;
+		lang: string;
+		year: number;
+		mmdd: string;
+	}[];
+	currentId?: string;
 };
 
 const {
@@ -26,10 +41,16 @@ const {
 	references = [],
 	translationHref,
 	backHref = '/',
-	backLabelZh = '回到全部笔记',
+	backLabelZh = '回到致云雀',
 	backLabelEn = 'All notes',
+	headings = [],
+	timeline = [],
+	currentId,
 } = Astro.props;
 const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
+
+// 传了 headings/timeline 才出宽屏三栏（笔记和夜莺颂两个栏目都传）
+const hasSides = timeline.length > 0 || headings.length > 0;
 
 // string 项转成统一的对象形状
 const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
@@ -42,8 +63,10 @@ const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
 
 	<body>
 		<Header />
-		<main>
-			<article>
+		<div class:list={['shell', { wide: hasSides }]}>
+			{timeline.length > 0 && <NoteTimeline items={timeline} currentId={currentId} />}
+			<main>
+				<article>
 				{
 					heroImage && (
 						<Image class="hero" width={1020} height={510} src={heroImage} alt="" />
@@ -110,13 +133,41 @@ const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
 						← <span class="only-zh">{backLabelZh}</span><span class="only-en">{backLabelEn}</span>
 					</a>
 				</p>
-			</article>
-		</main>
+				</article>
+			</main>
+			{headings.length > 0 && <Toc headings={headings} />}
+		</div>
 		<Footer />
+		<HiddenText />
 	</body>
 </html>
 
 <style>
+	/* 三栏外壳：中间正文保持原宽度，宽屏时左侧放时间轴、右侧放文内目录，
+	   窄屏自动回到单栏（两侧栏组件内部自带 display:none 断点） */
+	.shell {
+		flex: 1;
+		width: 100%;
+	}
+	@media (min-width: 1160px) {
+		.shell.wide {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) minmax(0, 44rem) minmax(0, 1fr);
+			align-items: start;
+		}
+		.shell.wide > main {
+			grid-column: 2;
+		}
+		.shell.wide > :global(.tl) {
+			grid-column: 1;
+			justify-self: end;
+		}
+		.shell.wide > :global(.toc) {
+			grid-column: 3;
+			justify-self: start;
+		}
+	}
+
 	.hero {
 		width: 100%;
 		height: auto;

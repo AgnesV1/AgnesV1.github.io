@@ -328,6 +328,13 @@ body::after {
 	margin: 2em 0 0.6em;
 }
 
+/* 从目录点击跳转时，标题上方留一点呼吸空间 */
+.prose h2,
+.prose h3,
+.prose h4 {
+	scroll-margin-top: 1.4rem;
+}
+
 .prose a {
 	color: var(--sky);
 	text-decoration: underline;

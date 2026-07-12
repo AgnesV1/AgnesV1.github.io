@@ -1,28 +1,42 @@
 ---
-import Layout from '../layouts/BlogPost.astro';
-import { GITHUB_URL } from '../consts';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
 ---
 
-<Layout
-	title="关于 / About"
-	description="关于 Agnes 和这个小站。"
-	pubDate={new Date('2026-07-10')}
-	lang="zh"
-	tags={[]}
->
-	<p>
-		你好，我是 Agnes。这里是我的个人小站——记笔记、写故事，也放一些照片，以后也许还会有自己拍的视频。
-	</p>
-	<p>
-		这个站用 <a href="https://astro.build" target="_blank">Astro</a> 搭建，托管在 GitHub Pages
-		上：每次推送新的 Markdown 文件，网站就会自动更新。
-	</p>
-	<p>
-		Hi, I'm Agnes. This is my little corner of the internet — notes, stories, photos, and (someday)
-		videos. Posts are written in Chinese or English; use the 中/EN toggle in the header to switch
-		languages.
-	</p>
-	<p>
-		想联系我或看看我在做什么，欢迎来 <a href={GITHUB_URL} target="_blank">GitHub</a> 逛逛。
-	</p>
-</Layout>
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`About · ${SITE_TITLE}`} description="The world is not beautiful, therefore it is." />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<p class="motto">The world is not beautiful, <em>therefore</em> it is.</p>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	main {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.motto {
+		margin: 0;
+		padding-bottom: 12vh; /* 视觉重心略高于几何中心 */
+		font-size: clamp(1.25rem, 3.2vw, 1.7rem);
+		line-height: 1.9;
+		letter-spacing: 0.01em;
+		text-align: center;
+		text-wrap: balance;
+		color: var(--tx);
+	}
+	.motto em {
+		font-style: italic;
+		color: var(--coral);
+	}
+</style>
