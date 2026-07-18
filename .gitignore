@@ -23,3 +23,6 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 .claude/
+
+# personal local notes (never published)
+发布指南.md
