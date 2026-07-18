@@ -1,5 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <circle cx="22" cy="25" r="15" fill="#F26D5B"/>
-  <circle cx="42" cy="25" r="15" fill="#8A7BF0" fill-opacity="0.88"/>
-  <circle cx="32" cy="42" r="15" fill="#2FB48C" fill-opacity="0.88"/>
+  <style>
+    .bird { stroke: #26232e; }
+    @media (prefers-color-scheme: dark) { .bird { stroke: #efecf6; } }
+  </style>
+  <g fill="none" stroke-linecap="round">
+    <path d="M8 52 A24 24 0 0 1 56 52" stroke="#d94f3b" stroke-width="5"/>
+    <path d="M13 52 A19 19 0 0 1 51 52" stroke="#c07c10" stroke-width="5"/>
+    <path d="M18 52 A14 14 0 0 1 46 52" stroke="#1d9e76" stroke-width="5"/>
+    <path d="M23 52 A9 9 0 0 1 41 52" stroke="#1f87b5" stroke-width="5"/>
+    <path d="M28 52 A4 4 0 0 1 36 52" stroke="#6d5ae6" stroke-width="5"/>
+  </g>
+  <path class="bird" d="M16 16 Q24 7 32 14 Q40 7 48 16" fill="none" stroke-width="4.2" stroke-linecap="round"/>
 </svg>

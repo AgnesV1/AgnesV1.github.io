@@ -4,6 +4,8 @@ import { Image, getImage } from 'astro:assets';
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
+import MusicDisc from '../../components/MusicDisc.astro';
+import Verse from '../../components/Verse.astro';
 import { SITE_TITLE } from '../../consts';
 
 // 相册数据全部来自文件夹,不需要写任何配置:
@@ -76,16 +78,22 @@ let flatIndex = 0;
 	<head>
 		<BaseHead
 			title={`镜花水月 Photos · ${SITE_TITLE}`}
-			description="快门记下的一些瞬间。Moments caught on camera."
+			description="是啊，我愿做一个五种感官的诗人。"
 		/>
 	</head>
 	<body>
 		<Header />
 		<main>
 			<section class="hero">
-				<h1><span class="only-zh">镜花水月</span><span class="only-en">Photos</span></h1>
-				<p class="intro only-zh">快门记下的一些瞬间,按年份往回翻。</p>
-				<p class="intro only-en">Moments caught on camera, year by year.</p>
+				<h1 class="verse">
+					<Verse
+						lines={[
+							'Yes, I would like to be a poet of the five senses,',
+							"That's why I don't allow myself to become one.",
+						]}
+					/>
+				</h1>
+				<MusicDisc />
 			</section>
 
 			{
@@ -249,25 +257,9 @@ let flatIndex = 0;
 </html>
 
 <style>
+	/* 引言诗句上移收紧；字体样式在 global.css 的 .hero .verse 统一定义 */
 	.hero {
-		margin: 2.5rem 0 3rem;
-	}
-	.hero h1 {
-		font-size: 2rem;
-		letter-spacing: -0.02em;
-		margin: 0 0 0.8rem;
-	}
-	.hero .en-word {
-		font-family: var(--font-mono);
-		font-size: 0.6em;
-		font-weight: 400;
-		color: var(--tx-2);
-	}
-	.intro {
-		font-size: 1.05rem;
-		color: var(--tx);
-		line-height: 2;
-		margin: 0;
+		margin: 0.8rem 0 2.2rem;
 	}
 	.empty {
 		color: var(--tx-2);

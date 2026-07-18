@@ -1,0 +1,31 @@
+---
+// 栏目引言诗：一词一色。每个单词按顺序轮换五色，但把颜色混向灰调压暗压淡，
+// 远看是一句安静的灰字，细看每个词才各有微微不同的色偏——克制版的彩虹。
+// 标点跟随所在单词，空格不占色号；多行用 lines 传入，行间自动 <br/>。
+type Props = { lines: string[] };
+
+const { lines } = Astro.props;
+
+let wi = 0;
+const rendered = lines.map((line) =>
+	line.split(/(\s+)/).map((seg) => ({
+		seg,
+		ci: /\S/.test(seg) ? wi++ % 5 : -1,
+	})),
+);
+---
+
+{
+	rendered.map((parts, li) => (
+		<>
+			{li > 0 && <br />}
+			{parts.map(({ seg, ci }) => (ci >= 0 ? <span class={`w c${ci}`}>{seg}</span> : seg))}
+		</>
+	))
+}
+
+<style>
+	.w {
+		color: color-mix(in srgb, var(--c) 45%, var(--tx-2));
+	}
+</style>

@@ -1,0 +1,226 @@
+---
+// 相册页背景音乐，三种音源按 consts.ts 配置优先级：
+//   1) Bandcamp 模式（PHOTOS_BGM_BANDCAMP）：42px 小条播放器**常驻**在组件挂载处
+//      （photos 页放在引言诗下方），页面一打开就看得到、点里面的 ▶ 即播；
+//      底色随日夜主题取色（切主题会重建播放器取新色，播放中切会从头再来）。
+//      Bandcamp 嵌入不支持自动播放，这是平台限制。
+//   2) YouTube 模式（PHOTOS_BGM_YOUTUBE_ID）：右下角悬浮小唱片，点击弹出 16:9
+//      迷你播放器（youtube-nocookie 域，单曲循环，autoplay 借点击手势直接出声；
+//      不隐藏播放器、不去掉 controls——被拦时访客还能手动点，纯背景音频化也
+//      违反 YouTube 嵌入条款）；再点唱片收起即停。
+//   3) 本地文件模式（都留空）：悬浮小唱片开关，探测 public/audio/photos.mp3|m4a|wav，
+//      文件不存在时按钮自动隐藏；进度记在 localStorage，下次接着听。
+---
+
+<div id="music-inline" class="inline" hidden></div>
+<button id="music-disc" class="disc" hidden aria-pressed="false" aria-label="背景音乐 Background music" title="背景音乐 Background music">
+	<span class="vinyl" aria-hidden="true"><span class="hole"></span></span>
+</button>
+<div id="music-player" class="player" hidden></div>
+
+<style>
+	/* Bandcamp 常驻小条：嵌在组件挂载处，随内容流动 */
+	.inline {
+		margin-top: 1.1rem;
+		width: min(100%, 380px);
+		height: 42px;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		overflow: hidden;
+		background: var(--bg);
+	}
+	.inline :global(iframe) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		border: 0;
+	}
+
+	.disc {
+		position: fixed;
+		right: 1.2rem;
+		bottom: 1.2rem;
+		z-index: 30;
+		width: 46px;
+		height: 46px;
+		padding: 0;
+		border: 1px solid var(--line);
+		border-radius: 50%;
+		background: var(--bg-soft);
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition:
+			transform 0.2s ease,
+			border-color 0.2s ease;
+	}
+	.disc:hover {
+		transform: scale(1.08);
+		border-color: var(--coral);
+	}
+	.vinyl {
+		width: 30px;
+		height: 30px;
+		border-radius: 50%;
+		/* 黑胶唱片：深色盘面 + 两圈纹路，中心是珊瑚色标 */
+		background:
+			radial-gradient(circle, transparent 0 5px, color-mix(in srgb, var(--tx) 78%, transparent) 5px 8px, transparent 8px 9px, color-mix(in srgb, var(--tx) 78%, transparent) 9px 12px, transparent 12px 13px, color-mix(in srgb, var(--tx) 78%, transparent) 13px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.hole {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: var(--coral);
+	}
+	.disc.playing .vinyl {
+		animation: disc-spin 3.5s linear infinite;
+	}
+	@keyframes disc-spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.disc.playing .vinyl {
+			animation: none;
+		}
+	}
+
+	/* YouTube 迷你播放器浮层：贴在唱片按钮上方，小屏自动收窄 */
+	.player {
+		position: fixed;
+		right: 1.2rem;
+		bottom: 4.6rem;
+		z-index: 29;
+		width: min(320px, calc(100vw - 2.4rem));
+		aspect-ratio: 16 / 9;
+		border: 1px solid var(--line);
+		border-radius: 12px;
+		overflow: hidden;
+		background: #000;
+	}
+	.player :global(iframe) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		border: 0;
+	}
+</style>
+
+<script>
+	import { PHOTOS_BGM_BANDCAMP, PHOTOS_BGM_YOUTUBE_ID } from '../consts';
+
+	const SOURCES = ['/audio/photos.mp3', '/audio/photos.m4a', '/audio/photos.wav'];
+	const KEY = 'photos-bgm-time';
+	const inline = document.getElementById('music-inline') as HTMLDivElement | null;
+	const btn = document.getElementById('music-disc') as HTMLButtonElement | null;
+	const player = document.getElementById('music-player') as HTMLDivElement | null;
+
+	const setPlaying = (on: boolean) => {
+		btn?.classList.toggle('playing', on);
+		btn?.setAttribute('aria-pressed', String(on));
+	};
+
+	// 浮层型播放器（YouTube）的开合逻辑
+	const setupOverlay = (makeSrc: () => string, allow: string) => {
+		if (!btn || !player) return;
+		btn.hidden = false;
+		btn.addEventListener('click', () => {
+			const open = !player.hidden;
+			if (open) {
+				player.hidden = true;
+				player.innerHTML = ''; // 移除 iframe 即停止播放
+				setPlaying(false);
+			} else {
+				const iframe = document.createElement('iframe');
+				iframe.src = makeSrc();
+				iframe.title = '背景音乐 Background music';
+				if (allow) iframe.allow = allow;
+				player.replaceChildren(iframe);
+				player.hidden = false;
+				setPlaying(true);
+			}
+		});
+	};
+
+	if (inline && PHOTOS_BGM_BANDCAMP) {
+		// —— Bandcamp 模式：常驻小条，页面一打开就可见可点 ——
+		btn?.remove();
+		player?.remove();
+		const mount = () => {
+			const theme = document.documentElement.dataset.theme;
+			const dark =
+				theme === 'dark' || (theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+			const bg = dark ? '16141c' : 'fffcf7';
+			const link = dark ? 'efecf6' : '26232e';
+			const iframe = document.createElement('iframe');
+			iframe.src = `https://bandcamp.com/EmbeddedPlayer/${PHOTOS_BGM_BANDCAMP}/size=small/bgcol=${bg}/linkcol=${link}/artwork=none/transparent=true/`;
+			iframe.title = '背景音乐 Background music';
+			inline.replaceChildren(iframe);
+			inline.hidden = false;
+		};
+		mount();
+		// 日夜切换时重建播放器取新配色（播放中切主题会从头再来，属可接受的取舍）
+		new MutationObserver(mount).observe(document.documentElement, {
+			attributeFilter: ['data-theme'],
+		});
+	} else if (btn && player && PHOTOS_BGM_YOUTUBE_ID) {
+		// —— YouTube 模式 ——
+		const id = encodeURIComponent(PHOTOS_BGM_YOUTUBE_ID);
+		setupOverlay(
+			() => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&loop=1&playlist=${id}`,
+			'autoplay; encrypted-media; picture-in-picture',
+		);
+	} else if (btn) {
+		// —— 本地文件模式 ——
+		(async () => {
+			let src: string | null = null;
+			for (const s of SOURCES) {
+				try {
+					const res = await fetch(s, { method: 'HEAD' });
+					if (res.ok) {
+						src = s;
+						break;
+					}
+				} catch {
+					/* 网络异常时按钮保持隐藏即可 */
+				}
+			}
+			if (!src) return;
+
+			const audio = new Audio(src);
+			audio.loop = true;
+			audio.preload = 'none';
+
+			// 恢复上次听到的位置（元数据加载后才知道时长，越界就从头来）
+			audio.addEventListener(
+				'loadedmetadata',
+				() => {
+					const t = Number(localStorage.getItem(KEY) || 0);
+					if (t > 0 && t < audio.duration - 1) audio.currentTime = t;
+				},
+				{ once: true },
+			);
+
+			audio.addEventListener('play', () => setPlaying(true));
+			audio.addEventListener('pause', () => setPlaying(false));
+
+			btn.hidden = false;
+			btn.addEventListener('click', () => {
+				if (audio.paused) audio.play().catch(() => {});
+				else audio.pause();
+			});
+
+			setInterval(() => {
+				if (!audio.paused) localStorage.setItem(KEY, String(audio.currentTime));
+			}, 5000);
+			addEventListener('pagehide', () => {
+				if (audio.currentTime > 0) localStorage.setItem(KEY, String(audio.currentTime));
+			});
+		})();
+	}
+</script>

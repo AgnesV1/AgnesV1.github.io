@@ -9,6 +9,10 @@ const [titleEn, titleZh] = SITE_TITLE.split('／').map((s) => s.trim());
 ---
 
 <header>
+	<!-- 下拉后浮现的迷你页头：小号淡色站名固定在最上端，点击回首页 -->
+	<a class="mini-bar" id="mini-bar" href="/" aria-hidden="true" tabindex="-1">
+		SKYLARKING <span class="dot">·</span> 荒腔走板
+	</a>
 	<nav>
 		<a class="logo" href="/">
 			{titleZh ? (
@@ -87,6 +91,54 @@ const [titleEn, titleZh] = SITE_TITLE.split('／').map((s) => s.trim());
 <style>
 	header {
 		width: 100%;
+	}
+	/* 迷你页头：比页头字标明显小、颜色淡，毛玻璃底固定在视口顶端；
+	   默认藏在上方，页头字标滚出视口后滑入（脚本用 IntersectionObserver 切换） */
+	.mini-bar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 45;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 2.15rem;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 0.8rem;
+		letter-spacing: 0.06em;
+		color: var(--tx-2);
+		text-decoration: none;
+		background: color-mix(in srgb, var(--bg) 80%, transparent);
+		border-bottom: 1px solid var(--line);
+		opacity: 0;
+		transform: translateY(-100%);
+		pointer-events: none;
+		transition:
+			opacity 0.25s ease,
+			transform 0.25s ease;
+	}
+	.mini-bar.show {
+		opacity: 1;
+		transform: none;
+		pointer-events: auto;
+		/* 毛玻璃只在可见时启用，藏着的时候不占合成层 */
+		-webkit-backdrop-filter: blur(10px);
+		backdrop-filter: blur(10px);
+	}
+	.mini-bar:hover {
+		color: var(--tx);
+	}
+	.mini-bar .dot {
+		color: var(--coral);
+		margin: 0 0.45em;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.mini-bar {
+			transition: opacity 0.25s ease;
+			transform: none;
+		}
 	}
 	nav {
 		max-width: 44rem;
@@ -245,4 +297,19 @@ const [titleEn, titleZh] = SITE_TITLE.split('／').map((s) => s.trim());
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') setOpen(false);
 	});
+
+	// 页头字标滚出视口 → 迷你页头滑入顶端；滚回来 → 迷你页头退场
+	const miniBar = document.getElementById('mini-bar');
+	const logo = document.querySelector('header .logo');
+	if (miniBar && logo) {
+		new IntersectionObserver(
+			([entry]) => {
+				const show = !entry.isIntersecting;
+				miniBar.classList.toggle('show', show);
+				miniBar.setAttribute('aria-hidden', String(!show));
+				(miniBar as HTMLAnchorElement).tabIndex = show ? 0 : -1;
+			},
+			{ rootMargin: '-1px 0px 0px 0px' },
+		).observe(logo);
+	}
 </script>

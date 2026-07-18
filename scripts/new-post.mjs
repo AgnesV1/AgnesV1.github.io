@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 // 新建一篇文章：npm run new -- "文章标题" [slug] [--en] [--bilingual] [--writing] [--video]
+// 新建一张短札：npm run new -- --card ["标题"] [slug] [--fiction] [--en] [--bilingual]
 //   slug         可选，决定文章 URL；不填则自动生成
 //   --en         英文文章（默认中文）
-//   --bilingual  同时生成中文版 slug.md 和英文版 slug.en.md（双语配对，仅限笔记）
+//   --bilingual  同时生成中文版 slug.md 和英文版 slug.en.md（双语配对，笔记和短札可用）
 //   --writing    放进写作栏目（/writing/，虚构写作）
 //   --video      生成 .mdx 并带上 YouTube 嵌入示例
+//   --card       短札（千字以内短文本，无详情页）；标题可省略，省略时列表里只显示日期
+//   --fiction    配合 --card：归属夜莺颂便签墙（默认归属致云雀混排流）
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,22 +16,34 @@ const args = process.argv.slice(2);
 const flags = args.filter((a) => a.startsWith('--'));
 const positional = args.filter((a) => !a.startsWith('--'));
 
-const title = positional[0];
-if (!title) {
-	console.log('用法: npm run new -- "文章标题" [slug] [--en] [--bilingual] [--writing] [--video]');
-	console.log('例如: npm run new -- "我的新文章" my-new-post');
-	console.log('      npm run new -- "双语笔记" my-note --bilingual');
-	console.log('      npm run new -- "一个短篇" a-story --writing');
-	process.exit(1);
-}
-
 const isEn = flags.includes('--en');
 const isBilingual = flags.includes('--bilingual');
 const isWriting = flags.includes('--writing');
 const isVideo = flags.includes('--video');
+const isCard = flags.includes('--card');
+const isFiction = flags.includes('--fiction');
+
+const title = positional[0];
+if (!title && !isCard) {
+	console.log('用法: npm run new -- "文章标题" [slug] [--en] [--bilingual] [--writing] [--video]');
+	console.log('      npm run new -- --card ["标题"] [slug] [--fiction]');
+	console.log('例如: npm run new -- "我的新文章" my-new-post');
+	console.log('      npm run new -- "双语笔记" my-note --bilingual');
+	console.log('      npm run new -- "一个短篇" a-story --writing');
+	console.log('      npm run new -- --card --fiction   （无标题短札，进夜莺颂便签墙）');
+	process.exit(1);
+}
 
 if (isBilingual && isWriting) {
-	console.error('✗ 双语配对目前只用于笔记（blog），--bilingual 和 --writing 不能同时用');
+	console.error('✗ 双语配对目前只用于笔记（blog）和短札（--card），--bilingual 和 --writing 不能同时用');
+	process.exit(1);
+}
+if (isCard && (isWriting || isVideo)) {
+	console.error('✗ --card 不能和 --writing / --video 同时用（短札是独立栏目，纯文本）');
+	process.exit(1);
+}
+if (isFiction && !isCard) {
+	console.error('✗ --fiction 只配合 --card 使用');
 	process.exit(1);
 }
 
@@ -39,17 +54,28 @@ const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDa
 // slug：优先用第二个参数；否则从标题里提取英文/数字；再不行就用日期
 let slug = positional[1];
 if (!slug) {
-	const derived = title
+	const derived = (title || '')
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-+|-+$/g, '');
-	slug = derived.length >= 3 ? derived : `post-${dateStr}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+	const auto = `${isCard ? 'card' : 'post'}-${dateStr}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+	slug = derived.length >= 3 ? derived : auto;
 }
 
 const ext = isVideo ? 'mdx' : 'md';
-const dir = path.join('src', 'content', isWriting ? 'writing' : 'blog');
+const dir = path.join('src', 'content', isCard ? 'cards' : isWriting ? 'writing' : 'blog');
 
-const frontmatter = (lang, t) => `---
+// 短札：title 可省略（省略时列表里只显示日期锚点），多一个 section 字段区分归属栏目
+const frontmatter = (lang, t) =>
+	isCard
+		? `---
+${t ? `title: '${t.replace(/'/g, "''")}'\n` : ''}pubDate: ${dateStr}
+lang: ${lang}
+tags: []
+section: ${isFiction ? 'fiction' : 'notes'}
+---
+`
+		: `---
 title: '${t.replace(/'/g, "''")}'
 description: ''
 pubDate: ${dateStr}
@@ -90,5 +116,5 @@ for (const t of targets) {
 if (isBilingual) {
 	console.log('  两个文件是同一篇的中/英版本，页面上会自动出现语言切换。');
 }
-console.log('  1. 用编辑器打开，写正文（记得补一句 description）');
+console.log(isCard ? '  1. 用编辑器打开，写正文（千字以内，正文会在列表里全文展开）' : '  1. 用编辑器打开，写正文（记得补一句 description）');
 console.log('  2. 写完运行 npm run up 发布上线');

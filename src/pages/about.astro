@@ -13,7 +13,13 @@ import { SITE_TITLE } from '../consts';
 	<body>
 		<Header />
 		<main>
-			<p class="motto">The world is not beautiful, <em>therefore</em> it is.</p>
+			<div class="center">
+				<p class="motto">The world is not beautiful, <em>therefore</em> it is.</p>
+				<p class="verse">
+					<span class="only-zh">我给你写诗，穿过隔开我们的东西：<br />手势、风俗、方言、道德习惯。</span>
+					<span class="only-en">I write to you across what separates us:<br />Gestures, conventions, idioms, mores.</span>
+				</p>
+			</div>
 		</main>
 		<Footer />
 	</body>
@@ -25,15 +31,23 @@ import { SITE_TITLE } from '../consts';
 		align-items: center;
 		justify-content: center;
 	}
+	.center {
+		padding-bottom: 12vh; /* 视觉重心略高于几何中心 */
+		text-align: center;
+	}
 	.motto {
 		margin: 0;
-		padding-bottom: 12vh; /* 视觉重心略高于几何中心 */
 		font-size: clamp(1.25rem, 3.2vw, 1.7rem);
 		line-height: 1.9;
 		letter-spacing: 0.01em;
-		text-align: center;
 		text-wrap: balance;
 		color: var(--tx);
+	}
+	.verse {
+		margin: 2.2rem 0 0;
+		font-size: clamp(0.92rem, 2.2vw, 1.05rem);
+		line-height: 2.1;
+		color: var(--tx-2);
 	}
 	.motto em {
 		font-style: italic;

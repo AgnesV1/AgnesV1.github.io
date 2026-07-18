@@ -1,15 +1,30 @@
 ---
+import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
+import CardNote from '../components/CardNote.astro';
 import FilterBar from '../components/FilterBar.astro';
 import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
+import HiddenText from '../components/HiddenText.astro';
+import Verse from '../components/Verse.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { tagColorIndex } from '../lib/tag-color';
 
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const posts = await getCollection('blog');
+const cards = (await getCollection('cards')).filter((c) => c.data.section === 'notes');
+
+// 长文和短札按日期混排在同一条时间流里
+type Item =
+	| { kind: 'post'; entry: CollectionEntry<'blog'> }
+	| { kind: 'card'; entry: CollectionEntry<'cards'> };
+const items: Item[] = [
+	...posts.map((entry): Item => ({ kind: 'post', entry })),
+	...cards.map((entry): Item => ({ kind: 'card', entry })),
+].sort((a, b) => b.entry.data.pubDate.valueOf() - a.entry.data.pubDate.valueOf());
+
+// 列表里只显示到月份，完整日期在文章页/短札展开后
+const ym = (d: Date) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
 
 // `foo.en` 是 `foo` 的英文版：列表里两版都渲染，按当前语言只显示其一
 const postMeta = (id: string) => {
@@ -18,9 +33,13 @@ const postMeta = (id: string) => {
 	return { base, href: isEn ? `/blog/${base}/en/` : `/blog/${id}/` };
 };
 
-// 筛选条数据：出现过的所有标签（字母序）+ 年份（新到旧）
-const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) => a.localeCompare(b, 'zh'));
-const allYears = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].sort((a, b) => b - a);
+// 筛选条数据：出现过的所有标签（字母序）+ 年份（新到旧），长文和短札都算
+const allTags = [...new Set(items.flatMap(({ entry }) => entry.data.tags))].sort((a, b) =>
+	a.localeCompare(b, 'zh'),
+);
+const allYears = [...new Set(items.map(({ entry }) => entry.data.pubDate.getFullYear()))].sort(
+	(a, b) => b - a,
+);
 ---
 
 <!doctype html>
@@ -32,17 +51,7 @@ const allYears = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].so
 		<Header />
 		<main>
 			<section class="hero">
-				<h1>s_k_y_l_a_r_k_i_n_g</h1>
-				<p class="intro only-zh">
-					在这里记<mark class="m-coral">笔记</mark>、写<a href="/writing"
-						><mark class="m-mint">故事</mark></a
-					>，也放一些<a href="/photos"><mark class="m-lav">照片</mark></a>。
-				</p>
-				<p class="intro only-en">
-					I keep <mark class="m-coral">notes</mark>, tell
-					<a href="/writing"><mark class="m-mint">stories</mark></a>, and take
-					<a href="/photos"><mark class="m-lav">photos</mark></a> here.
-				</p>
+				<h1 class="verse"><Verse lines={["Thou lovest, but ne'er knew love's sad satiety."]} /></h1>
 			</section>
 
 			<FilterBar tags={allTags} years={allYears} />
@@ -50,7 +59,11 @@ const allYears = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].so
 			<section class="posts">
 				<ul class="post-list">
 					{
-						posts.map((post, i) => {
+						items.map((item, i) => {
+							if (item.kind === 'card') {
+								return <CardNote card={item.entry} index={i} variant="flow" />;
+							}
+							const post = item.entry;
 							const { base, href } = postMeta(post.id);
 							return (
 								<li
@@ -62,14 +75,14 @@ const allYears = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].so
 								>
 									<a href={href}>
 										<span class="date">
-											<FormattedDate date={post.data.pubDate} />
+											<time datetime={post.data.pubDate.toISOString()}>{ym(post.data.pubDate)}</time>
 										</span>
 										<span class="body">
 											<span class="post-title">{post.data.title}</span>
 											{post.data.tags.length > 0 && (
 												<span class="tags">
 													{post.data.tags.map((tag) => (
-														<span class="tag">#{tag}</span>
+														<span class:list={['tag', `c${tagColorIndex(tag)}`]}>#{tag}</span>
 													))}
 												</span>
 											)}
@@ -83,6 +96,7 @@ const allYears = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].so
 			</section>
 		</main>
 		<Footer />
+		<HiddenText />
 
 		<script>
 			// 同一篇文章的中英两版只显示当前语言那版；没有翻译的文章始终显示
@@ -115,44 +129,9 @@ const allYears = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].so
 </html>
 
 <style>
+	/* 引言诗句上移收紧；字体样式在 global.css 的 .hero .verse 统一定义 */
 	.hero {
-		margin: 2.5rem 0 3rem;
-	}
-	.hero h1 {
-		/* 站名较长：小屏自动缩，最长一行也不换行 */
-		font-size: clamp(1.4rem, 7vw, 2rem);
-		letter-spacing: -0.01em;
-		white-space: nowrap;
-		margin: 0 0 0.8rem;
-	}
-	.intro {
-		font-size: 1.05rem;
-		color: var(--tx);
-		line-height: 2;
-		margin: 0;
-	}
-	mark {
-		background: none;
-		color: inherit;
-		padding: 0 0.1em;
-		background-image: linear-gradient(transparent 62%, var(--mark) 62%);
-	}
-	/* 简介里的「故事 / 照片」是入口链接：不变色不加下划线,悬停时高亮块变厚 */
-	.intro a {
-		color: inherit;
-		text-decoration: none;
-	}
-	.intro a:hover mark {
-		background-image: linear-gradient(transparent 30%, var(--mark) 30%);
-	}
-	.m-coral {
-		--mark: color-mix(in srgb, var(--coral) 30%, transparent);
-	}
-	.m-mint {
-		--mark: color-mix(in srgb, var(--mint) 32%, transparent);
-	}
-	.m-lav {
-		--mark: color-mix(in srgb, var(--lav) 30%, transparent);
+		margin: 0.8rem 0 2.2rem;
 	}
 
 	.post-list {
@@ -180,7 +159,7 @@ const allYears = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].so
 	}
 	.post-list a {
 		display: grid;
-		grid-template-columns: 6.5rem 1fr;
+		grid-template-columns: 4.6rem 1fr;
 		gap: 1.2rem;
 		align-items: baseline;
 		padding: 1.05rem 0.4rem;

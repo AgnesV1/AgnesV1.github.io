@@ -3,7 +3,7 @@ title: 'Hello, World'
 description: 'The site is live: why I built it, and what comes next.'
 pubDate: 2026-07-10
 lang: en
-tags: ['随笔']
+tags: ['essay']
 ---
 
 This little site opened its doors today.

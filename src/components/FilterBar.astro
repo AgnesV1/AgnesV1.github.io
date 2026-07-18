@@ -2,6 +2,8 @@
 // 列表页筛选条：标签点亮（命中任一即显示）+ 年份多选（横向可滚动），
 // 两组之间是「同时满足」。纯前端即时过滤，状态写入 URL（?tag=…&year=…）。
 // 列表条目需带 data-tags="a|b" 和 data-year="2026"。
+import { tagColorIndex } from '../lib/tag-color';
+
 type Props = { tags: string[]; years: number[] };
 
 const { tags, years } = Astro.props;
@@ -14,8 +16,8 @@ const showYears = years.length > 1;
 		<div class="filterbar">
 			{showTags && (
 				<div class="row tags" role="group" aria-label="按标签筛选">
-					{tags.map((t, i) => (
-						<button class:list={['fchip', `c${i % 5}`]} data-tag={t} aria-pressed="false">
+					{tags.map((t) => (
+						<button class:list={['fchip', `c${tagColorIndex(t)}`]} data-tag={t} aria-pressed="false">
 							#{t}
 						</button>
 					))}
@@ -131,15 +133,17 @@ const showYears = years.length > 1;
 	}
 
 	/* 被筛掉的条目：!important 压过语言切换脚本写的行内 display */
-	:global(.post-list li.filter-hide) {
+	:global(.post-list li.filter-hide),
+	:global(.cards-wall li.filter-hide) {
 		display: none !important;
 	}
 </style>
 
 <script>
 	const bar = document.querySelector<HTMLElement>('.filterbar');
-	const list = document.querySelector<HTMLElement>('.post-list');
-	if (bar && list) {
+	// 一页可能有多个列表容器（如 /writing 的长篇列表 + 短札墙），筛选同时作用于全部
+	const lists = [...document.querySelectorAll<HTMLElement>('.post-list, .cards-wall')];
+	if (bar && lists.length > 0) {
 		const tagBtns = [...bar.querySelectorAll<HTMLButtonElement>('.fchip')];
 		const yearBtns = [...bar.querySelectorAll<HTMLButtonElement>('.ychip')];
 		const clearBtn = bar.querySelector<HTMLButtonElement>('.clear');
@@ -155,9 +159,9 @@ const showYears = years.length > 1;
 		// 用微任务推迟到本轮事件的所有监听器（含语言切换脚本）跑完后再数可见条目
 		const updateEmpty = () => {
 			queueMicrotask(() => {
-				const anyVisible = [...list.querySelectorAll<HTMLLIElement>(':scope > li')].some(
-					(li) => getComputedStyle(li).display !== 'none',
-				);
+				const anyVisible = lists
+					.flatMap((list) => [...list.querySelectorAll<HTMLLIElement>(':scope > li')])
+					.some((li) => getComputedStyle(li).display !== 'none');
 				if (emptyMsg) emptyMsg.hidden = anyVisible;
 			});
 		};
@@ -175,11 +179,13 @@ const showYears = years.length > 1;
 			});
 			if (clearBtn) clearBtn.hidden = activeTags.size === 0 && activeYears.size === 0;
 
-			for (const li of list.querySelectorAll<HTMLLIElement>(':scope > li')) {
-				const liTags = (li.dataset.tags || '').split('|').filter(Boolean);
-				const okTag = activeTags.size === 0 || liTags.some((t) => activeTags.has(t));
-				const okYear = activeYears.size === 0 || activeYears.has(li.dataset.year || '');
-				li.classList.toggle('filter-hide', !(okTag && okYear));
+			for (const list of lists) {
+				for (const li of list.querySelectorAll<HTMLLIElement>(':scope > li')) {
+					const liTags = (li.dataset.tags || '').split('|').filter(Boolean);
+					const okTag = activeTags.size === 0 || liTags.some((t) => activeTags.has(t));
+					const okYear = activeYears.size === 0 || activeYears.has(li.dataset.year || '');
+					li.classList.toggle('filter-hide', !(okTag && okYear));
+				}
 			}
 
 			const p = new URLSearchParams();

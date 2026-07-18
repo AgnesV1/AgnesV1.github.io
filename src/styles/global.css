@@ -238,6 +238,19 @@ body::after {
 	}
 }
 
+/* ===== 栏目引言诗句 =====
+   比页头站名明显小一号、颜色淡。词级微彩由 Verse.astro 负责（一词一色的克制版），
+   这里只管字形；直接写纯文本时就是安静的灰字 */
+.hero .verse {
+	margin: 0;
+	font-size: clamp(0.88rem, 2.3vw, 1rem);
+	font-weight: 500;
+	font-style: italic;
+	letter-spacing: 0.02em;
+	line-height: 1.95;
+	color: var(--tx-2);
+}
+
 /* ===== 彩色小徽章（标签、语言标识） ===== */
 .c0 {
 	--c: var(--coral);

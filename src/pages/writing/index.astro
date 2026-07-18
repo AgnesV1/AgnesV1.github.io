@@ -1,38 +1,51 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
+import CardNote from '../../components/CardNote.astro';
 import FilterBar from '../../components/FilterBar.astro';
 import Footer from '../../components/Footer.astro';
-import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
+import HiddenText from '../../components/HiddenText.astro';
+import Verse from '../../components/Verse.astro';
 import { SITE_TITLE } from '../../consts';
+import { excerptOf } from '../../lib/excerpt';
+import { tagColorIndex } from '../../lib/tag-color';
 
 const pieces = (await getCollection('writing')).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 
-// 筛选条数据：标签（字母序）+ 年份（新到旧）；都不够多时筛选条自动不渲染
-const allTags = [...new Set(pieces.flatMap((p) => p.data.tags))].sort((a, b) => a.localeCompare(b, 'zh'));
-const allYears = [...new Set(pieces.map((p) => p.data.pubDate.getFullYear()))].sort((a, b) => b - a);
+// 短札（fiction 归属）：在长篇下方铺成便签墙
+const cards = (await getCollection('cards'))
+	.filter((c) => c.data.section === 'fiction')
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// 筛选条数据：标签（字母序）+ 年份（新到旧），长篇和短札都算；不够多时筛选条自动不渲染
+const all = [...pieces, ...cards];
+const allTags = [...new Set(all.flatMap((p) => p.data.tags))].sort((a, b) => a.localeCompare(b, 'zh'));
+const allYears = [...new Set(all.map((p) => p.data.pubDate.getFullYear()))].sort((a, b) => b - a);
 ---
 
 <!doctype html>
 <html lang="zh-CN">
 	<head>
-		<BaseHead title={`夜莺颂 Fiction · ${SITE_TITLE}`} description="虚构写作：短篇与片段。Fiction: short stories & fragments." />
+		<BaseHead title={`夜莺颂 Fiction · ${SITE_TITLE}`} description="Was it a vision, or a waking dream?" />
 	</head>
 	<body>
 		<Header />
 		<main>
 			<section class="hero">
-				<h1><span class="only-zh">夜莺颂</span><span class="only-en">Fiction</span></h1>
-				<p class="intro only-zh">一些虚构：短篇与片段。</p>
-				<p class="intro only-en">Fiction: short stories & fragments.</p>
+				<h1 class="verse"><Verse lines={["Was it a vision, or a waking dream?"]} /></h1>
 			</section>
 
 			<FilterBar tags={allTags} years={allYears} />
 
 			<section class="posts">
+				<details class="zone" open>
+					<summary>
+						<span class="only-zh">长篇</span><span class="only-en">Long-form</span>
+						<span class="zone-count">· {pieces.length}</span>
+					</summary>
 				{
 					pieces.length === 0 ? (
 						<p class="empty">
@@ -48,15 +61,13 @@ const allYears = [...new Set(pieces.map((p) => p.data.pubDate.getFullYear()))].s
 									data-year={piece.data.pubDate.getFullYear()}
 								>
 									<a href={`/writing/${piece.id}/`}>
-										<span class="date">
-											<FormattedDate date={piece.data.pubDate} />
-										</span>
 										<span class="body">
 											<span class="post-title">{piece.data.title}</span>
+											<span class="excerpt">{excerptOf(piece.body, 18)}</span>
 											{piece.data.tags.length > 0 && (
 												<span class="tags">
 													{piece.data.tags.map((tag) => (
-														<span class="tag">#{tag}</span>
+														<span class:list={['tag', `c${tagColorIndex(tag)}`]}>#{tag}</span>
 													))}
 												</span>
 											)}
@@ -67,36 +78,101 @@ const allYears = [...new Set(pieces.map((p) => p.data.pubDate.getFullYear()))].s
 						</ul>
 					)
 				}
+				</details>
+
+				{
+					cards.length > 0 && (
+						<div class="zone cards-zone">
+							<p class="zone-head">
+								<span class="only-zh">短札</span>
+								<span class="only-en">Cards</span>
+								<span class="zone-count">· {cards.length}</span>
+							</p>
+							<ul class="cards-wall">
+								{cards.map((card, i) => (
+									<CardNote card={card} index={i} variant="wall" />
+								))}
+							</ul>
+						</div>
+					)
+				}
 			</section>
 		</main>
 		<Footer />
+		<HiddenText />
+
+		<script>
+			// 短札的中英两版只显示当前语言那版（长篇不做双语配对，不受影响）
+			const applyCardLang = () => {
+				const lang = document.documentElement.dataset.lang || 'zh';
+				const items = [...document.querySelectorAll<HTMLLIElement>('.cards-wall li')];
+				const groups = new Map<string, HTMLLIElement[]>();
+				items.forEach((li) => {
+					const base = li.dataset.base || '';
+					groups.set(base, [...(groups.get(base) || []), li]);
+				});
+				groups.forEach((group) => {
+					if (group.length === 1) {
+						group[0].style.display = '';
+						return;
+					}
+					let shown = false;
+					group.forEach((li) => {
+						const match = li.dataset.lang === lang;
+						li.style.display = match ? '' : 'none';
+						shown ||= match;
+					});
+					if (!shown) group[0].style.display = '';
+				});
+			};
+			applyCardLang();
+			document.addEventListener('langchange', applyCardLang);
+		</script>
 	</body>
 </html>
 
 <style>
+	/* 引言诗句上移收紧；字体样式在 global.css 的 .hero .verse 统一定义 */
 	.hero {
-		margin: 2.5rem 0 3rem;
-	}
-	.hero h1 {
-		font-size: 2rem;
-		letter-spacing: -0.02em;
-		margin: 0 0 0.8rem;
-	}
-	.hero .en-word {
-		font-family: var(--font-mono);
-		font-size: 0.6em;
-		font-weight: 400;
-		color: var(--tx-2);
-	}
-	.intro {
-		font-size: 1.05rem;
-		color: var(--tx);
-		line-height: 2;
-		margin: 0;
+		margin: 0.8rem 0 2.2rem;
 	}
 	.empty {
 		color: var(--tx-2);
 		font-size: 0.95rem;
+	}
+
+	/* 分区标题：长篇是可折叠的 summary，短札是普通标题，两者视觉一致 */
+	.zone summary,
+	.zone-head {
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		color: var(--tx-2);
+		margin: 0;
+		user-select: none;
+	}
+	.zone summary {
+		cursor: pointer;
+		transition: color 0.2s ease;
+	}
+	.zone summary:hover {
+		color: var(--mint);
+	}
+	.zone-count {
+		color: var(--mint);
+	}
+	.cards-zone {
+		margin-top: 2.8rem;
+	}
+
+	/* 便签墙：flex 错落——每张宽度随内容长短，一行自动挤放，展开的卡占满整行 */
+	.cards-wall {
+		list-style: none;
+		margin: 1rem 0 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		gap: 0.85rem;
 	}
 
 	.post-list {
@@ -122,11 +198,9 @@ const allYears = [...new Set(pieces.map((p) => p.data.pubDate.getFullYear()))].s
 	.post-list li.c4 {
 		--c: var(--sky);
 	}
+	/* 长篇条目不显示日期（完整日期在文章页里），标题 + 首句摘录 + tags 一行流 */
 	.post-list a {
-		display: grid;
-		grid-template-columns: 6.5rem 1fr;
-		gap: 1.2rem;
-		align-items: baseline;
+		display: block;
 		padding: 1.05rem 0.4rem;
 		text-decoration: none;
 		border-radius: 10px;
@@ -139,17 +213,15 @@ const allYears = [...new Set(pieces.map((p) => p.data.pubDate.getFullYear()))].s
 	.post-list a:hover {
 		background: color-mix(in srgb, var(--c) 7%, transparent);
 	}
-	.date {
-		font-family: var(--font-mono);
-		font-size: 0.82rem;
-		color: var(--tx-2);
-		white-space: nowrap;
-	}
 	.body {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: baseline;
 		gap: 0.3rem 0.7rem;
+	}
+	.excerpt {
+		color: var(--tx-2);
+		font-size: 0.92rem;
 	}
 	.post-title {
 		font-weight: 600;

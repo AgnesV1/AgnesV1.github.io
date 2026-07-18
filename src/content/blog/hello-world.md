@@ -3,7 +3,7 @@ title: '你好，世界'
 description: '小站开张：为什么建它，以后写什么。'
 pubDate: 2026-07-10
 lang: zh
-tags: ['随笔']
+tags: ['essay']
 ---
 
 这个小站今天开张了。

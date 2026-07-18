@@ -157,16 +157,11 @@
 				})),
 			);
 		}
+		let hadDrawn = false; // 上一帧是否画过：全部不可见时跳过整帧，只补清一次画布
 		function drawDots(now: number) {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			const root = document.documentElement;
-			const theme = root.dataset.theme;
-			const isDark =
-				theme === 'dark' ||
-				(theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-			const ink = getComputedStyle(document.body).color;
-			const rootStyle = getComputedStyle(root);
-			const palette = PALETTE.map((v) => rootStyle.getPropertyValue(v).trim() || ink);
+			// 先收集需要绘制的隐藏段（收起的短札里 display:none 的段拿不到 rects，自动排除）；
+			// 一个都没有时直接返回，省掉每帧的全屏 clearRect 和样式查询
+			const jobs: { el: HT; rects: DOMRect[]; fade: number }[] = [];
 			items.forEach((el) => {
 				let fade = 0; // 0 = 正常隐藏态；(0,1) = 消散进行中
 				if (el._open) {
@@ -181,9 +176,29 @@
 				if (!rects.length) return;
 				// 只画视口内的隐藏段
 				if (rects[rects.length - 1].bottom < 0 || rects[0].top > innerHeight) return;
+				jobs.push({ el, rects, fade });
+			});
+			if (jobs.length === 0) {
+				if (hadDrawn) {
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+					hadDrawn = false;
+				}
+				return;
+			}
+			hadDrawn = true;
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			const root = document.documentElement;
+			const theme = root.dataset.theme;
+			const isDark =
+				theme === 'dark' ||
+				(theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+			const ink = getComputedStyle(document.body).color;
+			const rootStyle = getComputedStyle(root);
+			const palette = PALETTE.map((v) => rootStyle.getPropertyValue(v).trim() || ink);
+			const sec = now / 1000;
+			jobs.forEach(({ el, rects, fade }) => {
 				const sig = rects.map((r) => Math.round(r.width)).join(',');
 				if (!el._dots || sig !== el._sig) buildDots(el, rects, sig);
-				const sec = now / 1000;
 				rects.forEach((rect, i) => {
 					(el._dots![i] || []).forEach((d) => {
 						const tw = reduce ? 1 : 0.55 + 0.45 * Math.abs(Math.sin(sec * d.speed + d.phase));

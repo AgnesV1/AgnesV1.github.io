@@ -1,0 +1,298 @@
+---
+// 短札卡片：默认收起成一行（日期 + 标题/正文预览 + tags，像普通列表条目），
+// 点击原地展开全文，点其他区域或再点自动合拢，同时只展开一张（互斥，同星尘逻辑）。
+// URL 带 #c-xxx 直链时自动展开对应卡片。不设详情页。
+//   variant='flow' → 首页混排时间流：浅色背景块 + 左边框
+//   variant='wall' → /writing 便签墙：五色浅底 + 微倾便签，columns 紧密排布
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+import { excerptOf } from '../lib/excerpt';
+import { tagColorIndex } from '../lib/tag-color';
+
+type Props = {
+	card: CollectionEntry<'cards'>;
+	index: number;
+	variant: 'flow' | 'wall';
+};
+
+const { card, index, variant } = Astro.props;
+const { Content } = await render(card);
+
+// `foo.en` 是 `foo` 的英文版；data-base 加 card: 前缀，避免和长文同名条目混进一组
+const isEn = card.id.endsWith('.en');
+const base = isEn ? card.id.slice(0, -3) : card.id;
+const anchor = `c-${card.id.replaceAll('/', '-')}`;
+
+// 无标题短札的收起态预览：正文第一句（可用 <!--more--> 自定截断点，星尘不泄明文）
+const preview = card.data.title ? '' : excerptOf(card.body, 48);
+
+// 收起态日期显示规则：flow 只显示年.月，wall 完全不显示；展开后都显示完整日期
+const d = card.data.pubDate;
+const pad = (n: number) => String(n).padStart(2, '0');
+const ym = `${d.getFullYear()}.${pad(d.getMonth() + 1)}`;
+const ymd = `${ym}.${pad(d.getDate())}`;
+const iso = d.toISOString();
+---
+
+<li
+	class:list={['card', variant, `c${index % 5}`, 'collapsed']}
+	id={anchor}
+	data-lang={card.data.lang}
+	data-base={`card:${base}`}
+	data-tags={card.data.tags.join('|')}
+	data-year={card.data.pubDate.getFullYear()}
+	aria-expanded="false"
+>
+	<p class="card-meta">
+		<a class="card-date" href={`#${anchor}`}>
+			<time class="d-mon" datetime={iso}>{ym}</time>
+			<time class="d-full" datetime={iso}>{ymd}</time>
+		</a>
+		{card.data.title && <span class="card-title">{card.data.title}</span>}
+		{preview && <span class="card-preview">{preview}</span>}
+		{
+			card.data.tags.length > 0 && (
+				<span class="card-tags">
+					{card.data.tags.map((tag) => (
+						<span class:list={['tag', `c${tagColorIndex(tag)}`]}>#{tag}</span>
+					))}
+				</span>
+			)
+		}
+	</p>
+	<div class="card-body">
+		<Content />
+	</div>
+</li>
+
+<style>
+	.card.c0 {
+		--c: var(--coral);
+	}
+	.card.c1 {
+		--c: var(--mint);
+	}
+	.card.c2 {
+		--c: var(--lav);
+	}
+	.card.c3 {
+		--c: var(--sun);
+	}
+	.card.c4 {
+		--c: var(--sky);
+	}
+
+	.card {
+		margin: 0;
+		padding: 1rem 1.15rem;
+		background: color-mix(in srgb, var(--c) 6%, transparent);
+		cursor: pointer;
+	}
+	.card:focus-visible {
+		outline: 2px solid var(--c);
+		outline-offset: 2px;
+	}
+
+	/* 混排流：左边框贴着时间流，圆角只留右侧 */
+	.card.flow {
+		border-left: 3px solid color-mix(in srgb, var(--c) 65%, transparent);
+		border-radius: 4px 12px 12px 4px;
+		margin: 0.55rem 0;
+	}
+	/* 收起态：高度向普通列表条目看齐 */
+	.card.flow.collapsed {
+		padding: 0.78rem 1.15rem;
+	}
+
+	/* 便签墙：五色浅底 + 微倾；flex 错落布局——收起时宽度随文本长短自适应，
+	   一行挤下几张就挤几张，展开的那张独占整行 */
+	.card.wall {
+		background: color-mix(in srgb, var(--c) 8%, var(--bg));
+		border: 1px solid color-mix(in srgb, var(--c) 18%, transparent);
+		border-radius: 12px;
+		margin: 0;
+		flex: 0 1 auto;
+		min-width: 0;
+		max-width: 100%;
+		transition: transform 0.25s ease;
+	}
+	.card.wall:not(.collapsed) {
+		flex-basis: 100%;
+	}
+	.card.wall:nth-child(odd) {
+		transform: rotate(-0.8deg);
+	}
+	.card.wall:nth-child(even) {
+		transform: rotate(0.7deg);
+	}
+	.card.wall:hover {
+		transform: rotate(0deg) translateY(-2px);
+	}
+	.card.wall.collapsed {
+		padding: 0.72rem 0.95rem;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.card.wall,
+		.card.wall:nth-child(odd),
+		.card.wall:nth-child(even),
+		.card.wall:hover {
+			transform: none;
+		}
+	}
+
+	.card-meta {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 0.3rem 0.7rem;
+		margin: 0;
+	}
+	.card-date {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--tx-2);
+		text-decoration: none;
+		white-space: nowrap;
+		transition: color 0.2s ease;
+	}
+	.card-date:hover {
+		color: var(--c);
+	}
+	/* 日期三态：收起时 flow 只见年.月、wall 完全不见；展开后是完整日期 */
+	.card .d-mon {
+		display: none;
+	}
+	.card.flow.collapsed .d-mon {
+		display: inline;
+	}
+	.card.collapsed .d-full {
+		display: none;
+	}
+	.card.wall.collapsed .card-date {
+		display: none;
+	}
+	.card-title {
+		font-weight: 600;
+		font-size: 1.02rem;
+		color: var(--tx);
+	}
+	/* 预览只在收起态出现：单行截断，占满剩余宽度 */
+	.card-preview {
+		display: none;
+		color: var(--tx);
+		font-size: 0.95rem;
+		flex: 1;
+		min-width: 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.card.collapsed .card-preview {
+		display: block;
+	}
+
+	.card-tags {
+		display: inline-flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+	}
+	.tag {
+		font-family: var(--font-mono);
+		font-size: 0.76rem;
+		color: var(--c);
+	}
+
+	.card-body {
+		font-size: 0.95rem;
+		line-height: 1.95;
+		color: var(--tx);
+		margin-top: 0.55rem;
+		animation: card-open 0.25s ease;
+	}
+	.card.collapsed .card-body {
+		display: none;
+	}
+	@keyframes card-open {
+		from {
+			opacity: 0;
+			transform: translateY(-3px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.card-body {
+			animation: none;
+		}
+	}
+	.card-body :global(p) {
+		margin: 0 0 0.7em;
+	}
+	.card-body :global(p:last-child) {
+		margin-bottom: 0;
+	}
+	.card-body :global(a) {
+		color: var(--sky);
+	}
+</style>
+
+<script>
+	// 展开/收起：点卡片切换，点其他区域收起，同时只展开一张。
+	// 组件脚本全页只跑一次，统一管理页面上所有短札卡。
+	const cards = [...document.querySelectorAll<HTMLLIElement>('li.card')];
+	if (cards.length > 0) {
+		let openCard: HTMLLIElement | null = null;
+
+		const set = (el: HTMLLIElement, expanded: boolean) => {
+			el.classList.toggle('collapsed', !expanded);
+			el.setAttribute('aria-expanded', String(expanded));
+		};
+		const expand = (el: HTMLLIElement) => {
+			if (openCard && openCard !== el) set(openCard, false);
+			set(el, true);
+			openCard = el;
+		};
+		const collapse = (el: HTMLLIElement) => {
+			set(el, false);
+			if (openCard === el) openCard = null;
+		};
+
+		cards.forEach((el) => {
+			el.setAttribute('role', 'button');
+			el.tabIndex = 0;
+		});
+
+		document.addEventListener('click', (e) => {
+			const sel = document.getSelection();
+			if (sel && !sel.isCollapsed) return; // 用户在拖选文字，不当作点击
+			const t = e.target as HTMLElement;
+			const card = t.closest?.('li.card') as HTMLLIElement | null;
+			if (card) {
+				// 卡内链接和星尘各自响应，不触发开合
+				if (t.closest('a, hidden-text')) return;
+				card.classList.contains('collapsed') ? expand(card) : collapse(card);
+			} else if (openCard) {
+				collapse(openCard);
+			}
+		});
+
+		document.addEventListener('keydown', (e) => {
+			const t = e.target as HTMLElement;
+			if ((e.key === 'Enter' || e.key === ' ') && t.matches?.('li.card')) {
+				e.preventDefault();
+				const card = t as HTMLLIElement;
+				card.classList.contains('collapsed') ? expand(card) : collapse(card);
+			}
+		});
+
+		// 直链 #c-xxx（含点击卡片日期锚点）自动展开对应卡片
+		const openFromHash = () => {
+			const el = location.hash ? document.getElementById(location.hash.slice(1)) : null;
+			if (el && el.matches('li.card')) expand(el as HTMLLIElement);
+		};
+		openFromHash();
+		addEventListener('hashchange', openFromHash);
+	}
+</script>

@@ -8,6 +8,7 @@ import Header from '../components/Header.astro';
 import HiddenText from '../components/HiddenText.astro';
 import NoteTimeline from '../components/NoteTimeline.astro';
 import Toc from '../components/Toc.astro';
+import { tagColorIndex } from '../lib/tag-color';
 
 type Props = CollectionEntry<'blog'>['data'] & {
 	// 有配对翻译时传入对应 URL，页头语言切换会直接跳过去
@@ -88,8 +89,8 @@ const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
 					{
 						tags.length > 0 && (
 							<p class="tags">
-								{tags.map((tag, i) => (
-									<span class:list={['chip', `c${i % 5}`]}>#{tag}</span>
+								{tags.map((tag) => (
+									<span class:list={['chip', `c${tagColorIndex(tag)}`]}>#{tag}</span>
 								))}
 							</p>
 						)
@@ -128,6 +129,10 @@ const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
 						</details>
 					)
 				}
+				<p class="colophon">
+					<span class="only-zh">本文首发于本站 · CC BY-NC-ND 4.0 · 转载请注明出处</span>
+					<span class="only-en">First published here · CC BY-NC-ND 4.0 · please attribute</span>
+				</p>
 				<p class="back">
 					<a href={backHref}>
 						← <span class="only-zh">{backLabelZh}</span><span class="only-en">{backLabelEn}</span>
@@ -265,8 +270,14 @@ const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
 		border-bottom-color: var(--sky);
 	}
 
-	.back {
+	.colophon {
 		margin-top: 3.5rem;
+		font-family: var(--font-mono);
+		font-size: 0.76rem;
+		color: color-mix(in srgb, var(--tx-2) 75%, transparent);
+	}
+	.back {
+		margin-top: 1.2rem;
 	}
 	.back a {
 		font-family: var(--font-mono);
