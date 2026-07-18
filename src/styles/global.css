@@ -44,11 +44,6 @@ html[data-theme='dark'] {
 	color-scheme: dark;
 }
 
-/* 页面切换的淡入效果（支持的浏览器生效，不支持的自动忽略） */
-@view-transition {
-	navigation: auto;
-}
-
 *,
 *::before,
 *::after {
@@ -141,6 +136,8 @@ body::after {
 		radial-gradient(26rem 9rem at 15% 18%, color-mix(in srgb, var(--sky) 13%, transparent), transparent 65%),
 		radial-gradient(24rem 8.5rem at 52% 30%, rgba(255, 255, 255, 0.85), transparent 62%),
 		radial-gradient(28rem 9.5rem at 54% 34%, color-mix(in srgb, var(--sky) 10%, transparent), transparent 68%);
+	/* 独占合成层：位移动画走 GPU，不牵连静态底图反复重绘 */
+	will-change: transform;
 	animation: cloud-drift 150s ease-in-out infinite alternate;
 }
 @keyframes cloud-drift {
@@ -218,6 +215,8 @@ body::after {
 		radial-gradient(3.5px 3.5px at 68% 88%, color-mix(in srgb, var(--lav) 75%, transparent), transparent 60%);
 	background-repeat: repeat;
 	background-size: 980px 1150px;
+	/* 独占合成层：透明度呼吸走 GPU，不牵连 17 层渐变的静态星图重绘 */
+	will-change: opacity;
 	animation: twinkle 14s ease-in-out infinite;
 }
 @keyframes twinkle {
@@ -235,6 +234,7 @@ body::after {
 	body::before,
 	body::after {
 		animation: none;
+		will-change: auto;
 	}
 }
 

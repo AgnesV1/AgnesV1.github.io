@@ -183,7 +183,7 @@
 					ctx.clearRect(0, 0, canvas.width, canvas.height);
 					hadDrawn = false;
 				}
-				return;
+				return false;
 			}
 			hadDrawn = true;
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -226,13 +226,33 @@
 				});
 			});
 			ctx.globalAlpha = 1;
+			return true;
 		}
-		// rAF 负责流畅动画；低频 interval 兜底（rAF 被节流的环境里星尘依然存在）
-		const loop = (now: number) => {
-			drawDots(now || 0);
-			requestAnimationFrame(loop);
+		// rAF 只在有可见星尘时运转：连续约 1 秒画不出东西就停，主线程回到空闲；
+		// 滚动/点击/缩放（隐藏段可能进入可见态或被点开）时再唤醒。低频 interval 兜底
+		// 给 rAF 被节流的环境（如预览面板）保底。
+		let running = false;
+		let idleFrames = 0;
+		const tick = (now: number) => {
+			idleFrames = drawDots(now || 0) ? 0 : idleFrames + 1;
+			if (idleFrames > 60) {
+				running = false;
+				return;
+			}
+			requestAnimationFrame(tick);
 		};
-		loop(0);
+		const wake = () => {
+			idleFrames = 0;
+			if (!running) {
+				running = true;
+				requestAnimationFrame(tick);
+			}
+		};
+		wake();
+		addEventListener('scroll', wake, { passive: true });
+		addEventListener('resize', wake);
+		document.addEventListener('click', wake, true);
+		document.addEventListener('keydown', wake, true);
 		setInterval(() => drawDots(performance.now()), 400);
 
 		// 复制拦截：隐藏段无论开合，复制到的都是 █（保留换行）
