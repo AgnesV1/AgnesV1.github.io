@@ -26,3 +26,6 @@ pnpm-debug.log*
 
 # personal local notes (never published)
 发布指南.md
+
+# local design assets (never published)
+*.zip

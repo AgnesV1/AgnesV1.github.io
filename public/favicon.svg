@@ -1,14 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <style>
-    .bird { stroke: #26232e; }
-    @media (prefers-color-scheme: dark) { .bird { stroke: #efecf6; } }
-  </style>
-  <g fill="none" stroke-linecap="round">
-    <path d="M8 52 A24 24 0 0 1 56 52" stroke="#d94f3b" stroke-width="5"/>
-    <path d="M13 52 A19 19 0 0 1 51 52" stroke="#c07c10" stroke-width="5"/>
-    <path d="M18 52 A14 14 0 0 1 46 52" stroke="#1d9e76" stroke-width="5"/>
-    <path d="M23 52 A9 9 0 0 1 41 52" stroke="#1f87b5" stroke-width="5"/>
-    <path d="M28 52 A4 4 0 0 1 36 52" stroke="#6d5ae6" stroke-width="5"/>
-  </g>
-  <path class="bird" d="M16 16 Q24 7 32 14 Q40 7 48 16" fill="none" stroke-width="4.2" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+<defs>
+<path id="spark" d="M0 -6 C0.8 -2.5 2.5 -0.8 6 0 C2.5 0.8 0.8 2.5 0 6 C-0.8 2.5 -2.5 0.8 -6 0 C-2.5 -0.8 -0.8 -2.5 0 -6 Z"></path>
+<linearGradient id="disco" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#ffe9a8"></stop><stop offset="0.22" stop-color="#ffb3c9"></stop><stop offset="0.45" stop-color="#c9a8ff"></stop><stop offset="0.68" stop-color="#8fd8ff"></stop><stop offset="0.88" stop-color="#9fe8c4"></stop><stop offset="1" stop-color="#ffe9a8"></stop>
+</linearGradient>
+<radialGradient id="glare" cx="0.3" cy="0.25" r="0.6">
+<stop offset="0" stop-color="#ffffff" stop-opacity="0.85"></stop><stop offset="1" stop-color="#ffffff" stop-opacity="0"></stop>
+</radialGradient>
+<pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+<path d="M0 0 H10 M0 0 V10" stroke="rgba(20,15,40,0.45)" stroke-width="1.4" fill="none"></path>
+</pattern>
+</defs>
+<rect width="120" height="120" rx="27" fill="#141129"></rect>
+<use href="#spark" transform="translate(16 18) scale(0.5)" fill="#ffd97a"></use>
+<circle cx="108" cy="108" r="1.4" fill="#8fd8ff" opacity="0.8"></circle>
+<circle cx="12" cy="98" r="1.2" fill="#ffb3c9" opacity="0.8"></circle>
+<circle cx="106" cy="18" r="1.2" fill="#ffd97a" opacity="0.7"></circle>
+<circle cx="60" cy="58" r="44" fill="url(#disco)"></circle>
+<rect x="30.7" y="30.7" width="8.6" height="8.6" fill="#ffffff" opacity="0.55"></rect>
+<rect x="50.7" y="20.7" width="8.6" height="8.6" fill="#ffffff" opacity="0.45"></rect>
+<rect x="20.7" y="60.7" width="8.6" height="8.6" fill="#ffffff" opacity="0.4"></rect>
+<rect x="40.7" y="40.7" width="8.6" height="8.6" fill="rgba(20,15,40,0.3)"></rect>
+<rect x="50.7" y="40.7" width="8.6" height="8.6" fill="rgba(20,15,40,0.35)"></rect>
+<rect x="40.7" y="50.7" width="8.6" height="8.6" fill="rgba(20,15,40,0.25)"></rect>
+<rect x="30.7" y="80.7" width="8.6" height="8.6" fill="rgba(20,15,40,0.3)"></rect>
+<circle cx="60" cy="58" r="44" fill="url(#grid)"></circle>
+<circle cx="60" cy="58" r="44" fill="url(#glare)"></circle>
+<path d="M60 14 A44 44 0 0 1 60 102 A26 44 0 0 0 60 14 Z" fill="rgba(10,8,30,0.78)"></path>
+<use href="#spark" transform="translate(30 30) scale(0.45)" fill="#ffffff"></use>
 </svg>
