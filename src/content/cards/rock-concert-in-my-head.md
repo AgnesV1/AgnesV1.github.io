@@ -1,7 +1,7 @@
 ---
 pubDate: 2018-01-01T12:00:00Z
 lang: zh
-tags: [我编的]
+tags: [纯属虚构]
 section: fiction
 ---
 

@@ -2,7 +2,7 @@
 title: '十七岁跳级读了历史系的 Eva Stratt'
 pubDate: 2026-01-01T12:00:00Z
 lang: zh
-tags: [我编的]
+tags: [纯属虚构]
 section: fiction
 ---
 
