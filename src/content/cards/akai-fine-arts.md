@@ -1,4 +1,5 @@
 ---
+title: '思考赤老师会喜欢贵 fine arts 吗'
 pubDate: 2025-01-01T12:00:00Z
 lang: zh
 tags: [赤安]

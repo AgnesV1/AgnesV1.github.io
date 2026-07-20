@@ -1,4 +1,5 @@
 ---
+title: '老魏离开厂子单干'
 pubDate: 2019-01-01T12:00:00Z
 lang: zh
 tags: [全职高手]
