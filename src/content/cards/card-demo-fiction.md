@@ -2,7 +2,6 @@
 title: 便签墙示例
 pubDate: 2026-07-16
 lang: zh
-tags: [段子, demo]
 section: fiction
 ---
 
