@@ -11,8 +11,8 @@ import { SITE_TITLE } from '../../consts';
 // 相册数据全部来自文件夹,不需要写任何配置:
 //   src/assets/photos/2026/   → 按年份分组,新的年份在上
 //   src/assets/photos/pinned/ → 置顶,展示在最顶部
-// 组内按文件名倒序(建议命名 YYYY-MM-描述.jpg,新照片自然排前面);
-// 文件名去掉日期前缀后就是照片说明,连字符会变成空格。
+// 组内按文件名倒序(命名 YYYY-序号.jpg,如 2026-01.jpg,序号大的排前面);
+// 想给某张写说明,在序号后面接上文字即可,如 2026-03-初雪.jpg。
 const modules = import.meta.glob<{ default: ImageMetadata }>(
 	'../../assets/photos/**/*.{jpg,jpeg,JPG,JPEG,png,PNG,webp,WEBP}',
 	{ eager: true },
@@ -23,7 +23,7 @@ const UNGROUPED = '__ungrouped__';
 function toCaption(filename: string): string {
 	return filename
 		.replace(/\.(jpe?g|png|webp)$/i, '')
-		.replace(/^\d{4}([-_.]\d{1,2}){0,2}[-_.]?\s*/, '')
+		.replace(/^\d{4}[-_.]\d{1,3}[-_.]?\s*/, '') // 去掉「年份-序号」前缀
 		.replace(/[-_]+/g, ' ')
 		.trim();
 }
