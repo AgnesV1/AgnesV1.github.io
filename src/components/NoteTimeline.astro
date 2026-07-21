@@ -32,7 +32,7 @@ const years = [...new Set(items.map((i) => i.year))];
 									data-base={i.base}
 								>
 									<a href={i.href}>
-										<span class="d">{i.mmdd}</span>
+										{i.mmdd && <span class="d">{i.mmdd}</span>}
 										<span class="t">{i.title}</span>
 									</a>
 								</li>

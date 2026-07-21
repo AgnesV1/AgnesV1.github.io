@@ -17,6 +17,8 @@ type Props = CollectionEntry<'blog'>['data'] & {
 	backHref?: string;
 	backLabelZh?: string;
 	backLabelEn?: string;
+	// 夜莺颂(writing)专用：日期只显示年份（月/日是占位无意义）
+	dateYearOnly?: boolean;
 	// 笔记栏目专用：传了才渲染两侧栏（右侧文内目录 + 左侧时间轴）和小屏目录抽屉
 	headings?: { depth: number; slug: string; text: string }[];
 	timeline?: {
@@ -44,6 +46,7 @@ const {
 	backHref = '/',
 	backLabelZh = '回到致云雀',
 	backLabelEn = 'All notes',
+	dateYearOnly = false,
 	headings = [],
 	timeline = [],
 	currentId,
@@ -75,7 +78,7 @@ const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
 				}
 				<header class="post-head">
 					<p class="meta">
-						<FormattedDate date={pubDate} />
+						<FormattedDate date={pubDate} yearOnly={dateYearOnly} />
 						<span class:list={['lang-chip', lang]}>{lang === 'zh' ? '中文' : 'EN'}</span>
 						{
 							translationHref && (
@@ -98,7 +101,7 @@ const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
 					{
 						updatedDate && (
 							<p class="updated">
-								更新于 <FormattedDate date={updatedDate} />
+								更新于 <FormattedDate date={updatedDate} yearOnly={dateYearOnly} />
 							</p>
 						)
 					}

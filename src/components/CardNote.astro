@@ -46,6 +46,7 @@ const iso = d.toISOString();
 	<p class="card-meta">
 		<a class="card-date" href={`#${anchor}`}>
 			<time class="d-mon" datetime={iso}>{ym}</time>
+			<time class="d-year" datetime={iso}>{d.getFullYear()}</time>
 			<time class="d-full" datetime={iso}>{ymd}</time>
 		</a>
 		{card.data.title && <span class="card-title">{card.data.title}</span>}
@@ -158,8 +159,11 @@ const iso = d.toISOString();
 	.card-date:hover {
 		color: var(--c);
 	}
-	/* 日期三态：收起时 flow 只见年.月、wall 完全不见；展开后是完整日期 */
-	.card .d-mon {
+	/* 日期显示规则：
+	   - flow(首页 notes)：收起见年.月，展开见完整日期（不变）
+	   - wall(夜莺颂 fiction)：收起完全不见，展开只见年份（月/日无意义,占位日期） */
+	.card .d-mon,
+	.card .d-year {
 		display: none;
 	}
 	.card.flow.collapsed .d-mon {
@@ -170,6 +174,13 @@ const iso = d.toISOString();
 	}
 	.card.wall.collapsed .card-date {
 		display: none;
+	}
+	/* wall 展开：用年份替换完整日期 */
+	.card.wall:not(.collapsed) .d-full {
+		display: none;
+	}
+	.card.wall:not(.collapsed) .d-year {
+		display: inline;
 	}
 	.card-title {
 		font-weight: 600;

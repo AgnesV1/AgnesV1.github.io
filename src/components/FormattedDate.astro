@@ -1,12 +1,15 @@
 ---
 interface Props {
 	date: Date;
+	yearOnly?: boolean; // 夜莺颂(writing)只显示年份,月/日是占位无意义
 }
 
-const { date } = Astro.props;
+const { date, yearOnly = false } = Astro.props;
 
 const pad = (n: number) => String(n).padStart(2, '0');
-const formatted = `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())}`;
+const formatted = yearOnly
+	? String(date.getFullYear())
+	: `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())}`;
 ---
 
 <time datetime={date.toISOString()}>{formatted}</time>
