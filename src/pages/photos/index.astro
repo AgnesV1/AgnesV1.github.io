@@ -263,8 +263,18 @@ let flatIndex = 0;
 </html>
 
 <style>
-	/* 引言诗句上移收紧；字体样式在 global.css 的 .hero .verse 统一定义 */
+	/* 相册页放宽整体宽度:宽屏时照片墙随屏幕变宽,缩略图自动重排更多列;
+	   窄屏(<768px)保持 global.css 的 44rem 原样,不影响手机阅读。 */
+	@media (min-width: 768px) {
+		main {
+			max-width: min(1400px, 92vw);
+		}
+	}
+
+	/* 引言诗句上移收紧；字体样式在 global.css 的 .hero .verse 统一定义。
+	   限宽 44rem:诗句与播放器留在窄栏,不跟着照片墙一起拉伸。 */
 	.hero {
+		max-width: 44rem;
 		margin: 0.8rem 0 2.2rem;
 	}
 	.empty {
