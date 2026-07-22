@@ -11,7 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "new": "node scripts/new-post.mjs",
-    "up": "node scripts/up.mjs"
+    "up": "node scripts/up.mjs",
+    "photos": "node scripts/photos.mjs"
   },
   "dependencies": {
     "@astro-community/astro-embed-youtube": "^0.5.10",
