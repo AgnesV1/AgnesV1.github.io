@@ -1,80 +1,107 @@
 #!/usr/bin/env python3
-"""相册照片入库前的批处理：转 JPG + 压到长边 1600 + 清空 EXIF + 打两层水印。
+"""相册照片入库前的批处理：转 JPG + 压到长边 1600 + 清空 EXIF + 打 Getty 式水印。
 
     python3 scripts/watermark.py <原图目录> <输出目录>
 
 原图目录按年份分子目录，输出保持同样结构。原图不会被改动。
 依赖：pip install Pillow pillow-heif
 处理完把输出的图重命名成 YYYY-序号.jpg 放进 src/assets/photos/<年份>/。
+
+水印样式（与灯箱软水印 src/pages/photos/index.astro 的 .lb-plate 对齐）：
+画面约 2/3 高度处一块半透明灰底板，右缘贴图片右边、左圆角；板上小号白字左对齐——
+第一行 skylarking(粗)+images(细) 拼出字标，第二行 Credit 网址；右侧留一截灰尾。
+灰板宽度固定（按长边取比例）→ 窄图上占比大偏左、宽图上占比小偏右。
 """
-import sys, math, pathlib
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
+import sys, pathlib
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import pillow_heif
 
 pillow_heif.register_heif_opener()
 
-TEXT = "agnesv1.github.io"
-FONT = "/System/Library/Fonts/Supplemental/Arial.ttf"
+# ---- 文案 ----
+TEXT_BOLD  = "skylarking"            # 字标粗体段
+TEXT_LIGHT = "images"               # 字标细体段（拼成 skylarkingimages）
+CREDIT     = "Credit: agnesv1.github.io"
 
-BIG_OPACITY   = 13     # 底层大字不透明度 (0-255)，13≈5%
-BIG_COLOR     = (0, 0, 0)  # 深色水印
-BIG_SPAN      = 0.80   # 旋转后大字宽度 / 图宽
-BIG_ANGLE     = -30
-BIG_CENTER_Y  = 0.67   # 大字中心高度 / 图高，0.5=正中，0.67=下三分之一
-BLUR          = 0.045  # 模糊半径 / 字号
+# ---- 字体（粗 / 常规；常规当作细体段，Arial 无 Light 权重）----
+FONT_BOLD = "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
+FONT_REG  = "/System/Library/Fonts/Supplemental/Arial.ttf"
 
-SMALL_OPACITY = 128    # 顶层小字 ≈50%
-SMALL_RATIO   = 0.026
-MARGIN        = 0.03   # 边距 / 短边
+# ---- 尺寸/位置：全部按长边(≈MAX_EDGE)取比例，保证不同图观感一致 ----
+BRAND_RATIO    = 0.033   # 字标字号 / 长边
+CREDIT_RATIO   = 0.020   # Credit 字号 / 长边
+PLATE_FRAC     = 0.45    # 灰板固定宽度 / 长边（窄图占比大→偏左，宽图占比小→偏右）
+PLATE_MAX_W    = 0.62    # 灰板宽度上限 / 图宽（防极窄图溢出）
+PLATE_CENTER_Y = 0.66    # 灰板垂直中心 / 图高（≈2/3）
+PAD_X_EM       = 0.85    # 内边距 / 字标字号
+PAD_Y_EM       = 0.5
+GAP_EM         = 0.12    # 两行间距 / 字标字号
+RADIUS_EM      = 0.16    # 左圆角 / 字标字号
 
-QUALITY   = 88
-MAX_EDGE  = 1600       # 长边统一上限，0 = 不缩放
+PLATE_RGB   = (120, 120, 120)
+PLATE_ALPHA = 107        # 灰底不透明度 (0-255)，≈42%
+TEXT_RGB    = (255, 255, 255)
+TEXT_ALPHA  = 235
+SHADOW_ALPHA = 90        # 文字阴影，压在灰板高光区也能看清
+
+QUALITY  = 88
+MAX_EDGE = 1600          # 长边统一上限，0 = 不缩放
 
 
-def fit_font(text, target_w):
-    """二分找出让文字宽度接近 target_w 的字号。"""
-    lo, hi = 8, 4000
-    while lo < hi:
-        mid = (lo + hi + 1) // 2
-        if ImageFont.truetype(FONT, mid).getlength(text) <= target_w:
-            lo = mid
-        else:
-            hi = mid - 1
-    return ImageFont.truetype(FONT, lo)
+def line_height(font):
+    """含升/降部的稳定行高。"""
+    return font.getbbox("Ahgpy")[3]
 
 
 def watermark(img):
     W, H = img.size
-    short = min(W, H)
+    long_edge = max(W, H)
 
-    # ---- 底层：放大 + 旋转 + 虚化 ----
-    # 目标：整串文字旋转后仍完整落在画面内，尽量占满
-    big = fit_font(TEXT, W * BIG_SPAN / abs(math.cos(math.radians(BIG_ANGLE))))
-    l, t, r, b = big.getbbox(TEXT)
-    pad = int(big.size * 0.4)
+    brand_size  = max(12, int(long_edge * BRAND_RATIO))
+    credit_size = max(9,  int(long_edge * CREDIT_RATIO))
+    f_bold   = ImageFont.truetype(FONT_BOLD, brand_size)
+    f_light  = ImageFont.truetype(FONT_REG,  brand_size)
+    f_credit = ImageFont.truetype(FONT_REG,  credit_size)
 
-    layer = Image.new("L", (r - l + pad * 2, b - t + pad * 2), 0)
-    ImageDraw.Draw(layer).text((pad - l, pad - t), TEXT, font=big, fill=BIG_OPACITY)
-    layer = layer.filter(ImageFilter.GaussianBlur(max(1, big.size * BLUR)))
-    layer = layer.rotate(BIG_ANGLE, expand=True, resample=Image.BICUBIC)
+    pad_x  = int(brand_size * PAD_X_EM)
+    pad_y  = int(brand_size * PAD_Y_EM)
+    gap    = int(brand_size * GAP_EM)
+    radius = max(2, int(brand_size * RADIUS_EM))
 
-    # 垂直居于下三分之一，但留出边距别撞到底部小字
-    cy = int(H * BIG_CENTER_Y)
-    top = min(cy - layer.height // 2, H - layer.height - int(short * MARGIN * 2))
-    mask = Image.new("L", (W, H), 0)
-    mask.paste(layer, ((W - layer.width) // 2, max(0, top)))
-    img.paste(Image.new("RGB", (W, H), BIG_COLOR), (0, 0), mask)
+    # 文本量度
+    bold_w   = f_bold.getlength(TEXT_BOLD)
+    brand_w  = bold_w + f_light.getlength(TEXT_LIGHT)
+    credit_w = f_credit.getlength(CREDIT)
+    text_w   = max(brand_w, credit_w)
+    brand_lh, credit_lh = line_height(f_bold), line_height(f_credit)
 
-    # ---- 顶层：右下角清晰小字 ----
-    small = ImageFont.truetype(FONT, max(11, int(short * SMALL_RATIO)))
-    m = int(short * MARGIN)
-    d = ImageDraw.Draw(img, "RGBA")
-    off = max(1, small.size // 22)
-    d.text((W - m + off, H - m + off), TEXT, font=small,
-           fill=(0, 0, 0, SMALL_OPACITY // 2), anchor="rs")       # 阴影
-    d.text((W - m, H - m), TEXT, font=small,
-           fill=(255, 255, 255, SMALL_OPACITY), anchor="rs")      # 正文
-    return img
+    # 灰板宽度：固定(长边比例) → 窄图偏左、宽图偏右；上限 62% 图宽；但不小于文字
+    plate_w = min(int(long_edge * PLATE_FRAC), int(W * PLATE_MAX_W))
+    plate_w = max(plate_w, int(text_w + 2 * pad_x))
+    plate_h = brand_lh + gap + credit_lh + 2 * pad_y
+
+    x0 = W - plate_w                       # 右缘 x1=W 贴图片边
+    cy = int(H * PLATE_CENTER_Y)
+    y0 = cy - plate_h // 2
+
+    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    od = ImageDraw.Draw(overlay)
+    # 右边画到 W+radius（画布外），右圆角被裁掉 → 左圆右直、右缘齐边
+    od.rounded_rectangle([x0, y0, W + radius, y0 + plate_h],
+                         radius=radius, fill=(*PLATE_RGB, PLATE_ALPHA))
+
+    tx, ty = x0 + pad_x, y0 + pad_y
+    sh = max(1, brand_size // 20)          # 阴影偏移
+
+    def draw_run(x, y, s, font):
+        od.text((x + sh, y + sh), s, font=font, fill=(0, 0, 0, SHADOW_ALPHA))
+        od.text((x, y), s, font=font, fill=(*TEXT_RGB, TEXT_ALPHA))
+
+    draw_run(tx, ty, TEXT_BOLD, f_bold)                 # skylarking 粗
+    draw_run(tx + bold_w, ty, TEXT_LIGHT, f_light)      # images 细
+    draw_run(tx, ty + brand_lh + gap, CREDIT, f_credit) # Credit 行
+
+    return Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
 
 
 def process(src, dst):
