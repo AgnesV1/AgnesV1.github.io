@@ -19,6 +19,13 @@ import { SITE_TITLE } from '../consts';
 					<span class="only-zh">我给你写诗，穿过隔开我们的东西：<br />手势、风俗、方言、道德习惯。</span>
 					<span class="only-en">I write to you across what separates us:<br />Gestures, conventions, idioms, mores.</span>
 				</p>
+				<p class="verse verse-2">
+					<span class="only-zh">我自相矛盾吗？<br />好吧，那我就自相矛盾，<br />（我辽阔，我包罗万象。）</span>
+					<span class="only-en"
+						>Do I contradict myself?<br />Very well then I contradict myself,<br />(I am large, I contain
+						multitudes.)</span
+					>
+				</p>
 			</div>
 		</main>
 		<Footer />
@@ -48,6 +55,18 @@ import { SITE_TITLE } from '../consts';
 		font-size: clamp(0.92rem, 2.2vw, 1.05rem);
 		line-height: 2.1;
 		color: var(--tx-2);
+	}
+	/* 第二段诗：与上一段之间留一条 · · · 细分隔，免得六行读成一首 */
+	.verse-2 {
+		margin-top: 1.5rem;
+	}
+	.verse-2::before {
+		content: '· · ·';
+		display: block;
+		margin-bottom: 1.3rem;
+		letter-spacing: 0.35em;
+		color: var(--tx-2);
+		opacity: 0.4;
 	}
 	.motto em {
 		font-style: italic;
