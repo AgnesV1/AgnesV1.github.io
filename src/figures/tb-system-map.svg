@@ -1,0 +1,46 @@
+<svg class="fig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 670" width="100%" role="img" aria-label="System map: GitHub serves the static files, the browser runs them and keeps a local copy, and an Apps Script web app reads and writes Google Sheets.">
+<style>.fig{font-family:var(--font-body,-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif)}
+.fig .t{font-size:14px;font-weight:600;fill:var(--tx,#26232e)}
+.fig .s{font-size:12px;fill:var(--tx-2,#6f687c)}
+.fig .b rect{fill:color-mix(in srgb,var(--c) 11%,var(--bg,#fffcf7));stroke:var(--c);stroke-width:1}
+.fig .lav{--c:var(--lav,#6d5ae6)}
+.fig .mint{--c:var(--mint,#1d9e76)}
+.fig .coral{--c:var(--coral,#d94f3b)}
+.fig .plain rect{fill:var(--bg-soft,#f5f0e8);stroke:color-mix(in srgb,var(--tx-2,#6f687c) 40%,var(--bg,#fffcf7))}
+.fig .a{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:1.5}
+.fig .f{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:.75;stroke-dasharray:4 4;opacity:.7}
+.fig marker path{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}</style>
+<defs><marker id="fig-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9"/></marker></defs>
+<rect class="f" x="40" y="30" width="600" height="96" rx="12"/>
+<text class="t" x="60" y="70" text-anchor="start" dominant-baseline="central">GitHub</text>
+<text class="s" x="60" y="90" text-anchor="start" dominant-baseline="central">where the code lives</text>
+<g class="b plain"><rect x="262" y="50" width="156" height="56" rx="8"/><text class="t" x="340" y="69" text-anchor="middle" dominant-baseline="central">Repository (main)</text><text class="s" x="340" y="88" text-anchor="middle" dominant-baseline="central">No build step</text></g>
+<g class="b plain"><rect x="464" y="50" width="156" height="56" rx="8"/><text class="t" x="542" y="69" text-anchor="middle" dominant-baseline="central">GitHub Pages</text><text class="s" x="542" y="88" text-anchor="middle" dominant-baseline="central">Public static URL</text></g>
+<line class="a" x1="420" y1="78" x2="460" y2="78" marker-end="url(#fig-arrow)"/>
+<line class="a" x1="542" y1="108" x2="542" y2="202" marker-end="url(#fig-arrow)"/>
+<text class="s" x="530" y="146" text-anchor="end" dominant-baseline="central">downloaded on page load</text>
+<rect class="f" x="40" y="166" width="600" height="222" rx="12"/>
+<text class="t" x="60" y="188" text-anchor="start" dominant-baseline="central">Your device</text><text class="s" x="158" y="188" text-anchor="start" dominant-baseline="central">the browser on a laptop or phone</text>
+<g class="b lav"><rect x="60" y="206" width="156" height="56" rx="8"/><text class="t" x="138" y="225" text-anchor="middle" dominant-baseline="central">Pure logic</text><text class="s" x="138" y="244" text-anchor="middle" dominant-baseline="central">Stats, meals, repeats</text></g>
+<g class="b lav"><rect x="262" y="206" width="156" height="56" rx="8"/><text class="t" x="340" y="225" text-anchor="middle" dominant-baseline="central">UI (js/ui)</text><text class="s" x="340" y="244" text-anchor="middle" dominant-baseline="central">9 views, re-rendered</text></g>
+<g class="b lav"><rect x="464" y="206" width="156" height="56" rx="8"/><text class="t" x="542" y="225" text-anchor="middle" dominant-baseline="central">Service Worker</text><text class="s" x="542" y="244" text-anchor="middle" dominant-baseline="central">Network, else cache</text></g>
+<line class="a" x1="462" y1="234" x2="422" y2="234" marker-end="url(#fig-arrow)"/>
+<line class="a" x1="260" y1="234" x2="220" y2="234" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="60" y="312" width="156" height="56" rx="8"/><text class="t" x="138" y="331" text-anchor="middle" dominant-baseline="central">localStorage</text><text class="s" x="138" y="350" text-anchor="middle" dominant-baseline="central">Full local copy</text></g>
+<g class="b lav"><rect x="262" y="312" width="156" height="56" rx="8"/><text class="t" x="340" y="331" text-anchor="middle" dominant-baseline="central">store.js</text><text class="s" x="340" y="350" text-anchor="middle" dominant-baseline="central">All writes go here</text></g>
+<g class="b lav"><rect x="464" y="312" width="156" height="56" rx="8"/><text class="t" x="542" y="331" text-anchor="middle" dominant-baseline="central">sync.js</text><text class="s" x="542" y="350" text-anchor="middle" dominant-baseline="central">Push, then pull</text></g>
+<line class="a" x1="340" y1="266" x2="340" y2="308" marker-end="url(#fig-arrow)" marker-start="url(#fig-arrow)"/>
+<line class="a" x1="258" y1="340" x2="220" y2="340" marker-end="url(#fig-arrow)" marker-start="url(#fig-arrow)"/>
+<line class="a" x1="422" y1="340" x2="460" y2="340" marker-end="url(#fig-arrow)" marker-start="url(#fig-arrow)"/>
+<line class="a" x1="542" y1="372" x2="542" y2="464" marker-end="url(#fig-arrow)" marker-start="url(#fig-arrow)"/>
+<text class="s" x="530" y="408" text-anchor="end" dominant-baseline="central">one JSON POST</text>
+<rect class="f" x="40" y="428" width="600" height="222" rx="12"/>
+<text class="t" x="60" y="450" text-anchor="start" dominant-baseline="central">Google</text><text class="s" x="118" y="450" text-anchor="start" dominant-baseline="central">sheets in your own account</text>
+<g class="b mint"><rect x="60" y="468" width="560" height="56" rx="8"/><text class="t" x="340" y="487" text-anchor="middle" dominant-baseline="central">Apps Script web app (Code.gs)</text><text class="s" x="340" y="506" text-anchor="middle" dominant-baseline="central">Checks secret and version, takes a lock, then reads and writes the sheets</text></g>
+<g class="b mint"><rect x="60" y="574" width="156" height="56" rx="8"/><text class="t" x="138" y="593" text-anchor="middle" dominant-baseline="central">Main sheet</text><text class="s" x="138" y="612" text-anchor="middle" dominant-baseline="central">Tasks and plans</text></g>
+<g class="b mint"><rect x="262" y="574" width="156" height="56" rx="8"/><text class="t" x="340" y="593" text-anchor="middle" dominant-baseline="central">Reading sheet</text><text class="s" x="340" y="612" text-anchor="middle" dominant-baseline="central">Want and finished</text></g>
+<g class="b mint"><rect x="464" y="574" width="156" height="56" rx="8"/><text class="t" x="542" y="593" text-anchor="middle" dominant-baseline="central">Quarter sheet</text><text class="s" x="542" y="612" text-anchor="middle" dominant-baseline="central">Two cells per day</text></g>
+<line class="a" x1="138" y1="528" x2="138" y2="570" marker-end="url(#fig-arrow)" marker-start="url(#fig-arrow)"/>
+<line class="a" x1="340" y1="528" x2="340" y2="570" marker-end="url(#fig-arrow)" marker-start="url(#fig-arrow)"/>
+<line class="a" x1="542" y1="528" x2="542" y2="570" marker-end="url(#fig-arrow)"/>
+</svg>

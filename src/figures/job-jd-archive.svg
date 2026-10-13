@@ -1,0 +1,29 @@
+<svg class="fig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 376" width="100%" role="img" aria-label="The JD archive: search by hand to get a feel for the market, paste each link to an AI to get a structured JD.md and an index row, rank and cut the day's batch, write a resume.md for the ones kept, and keep both files so you can prepare the moment someone calls.">
+<style>.fig{font-family:var(--font-body,-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif)}
+.fig .t{font-size:14px;font-weight:600;fill:var(--tx,#26232e)}
+.fig .s{font-size:12px;fill:var(--tx-2,#6f687c)}
+.fig .b rect{fill:color-mix(in srgb,var(--c) 11%,var(--bg,#fffcf7));stroke:var(--c);stroke-width:1}
+.fig .lav{--c:var(--lav,#6d5ae6)}
+.fig .mint{--c:var(--mint,#1d9e76)}
+.fig .coral{--c:var(--coral,#d94f3b)}
+.fig .plain rect{fill:var(--bg-soft,#f5f0e8);stroke:color-mix(in srgb,var(--tx-2,#6f687c) 40%,var(--bg,#fffcf7))}
+.fig .a{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:1.5}
+.fig .f{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:.75;stroke-dasharray:4 4;opacity:.7}
+.fig marker path{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}</style>
+<defs><marker id="fig-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9"/></marker></defs>
+<rect class="f" x="40" y="30" width="600" height="226" rx="12"/>
+<text class="t" x="60" y="52" text-anchor="start" dominant-baseline="central">JD archive</text><text class="s" x="150" y="52" text-anchor="start" dominant-baseline="central">plain .md files in a local folder or an Obsidian vault</text>
+<g class="b lav"><rect x="60" y="70" width="156" height="56" rx="8"/><text class="t" x="138" y="89" text-anchor="middle" dominant-baseline="central">Search by hand</text><text class="s" x="138" y="108" text-anchor="middle" dominant-baseline="central">Builds a market feel</text></g>
+<line class="a" x1="218" y1="98" x2="258" y2="98" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="262" y="70" width="156" height="56" rx="8"/><text class="t" x="340" y="89" text-anchor="middle" dominant-baseline="central">Paste link to AI</text><text class="s" x="340" y="108" text-anchor="middle" dominant-baseline="central">JD.md plus variables</text></g>
+<line class="a" x1="420" y1="98" x2="460" y2="98" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="464" y="70" width="156" height="56" rx="8"/><text class="t" x="542" y="89" text-anchor="middle" dominant-baseline="central">Index row</text><text class="s" x="542" y="108" text-anchor="middle" dominant-baseline="central">Markdown table, link</text></g>
+<path class="a" d="M542 128 L542 153 L138 153 L138 176" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="60" y="180" width="156" height="56" rx="8"/><text class="t" x="138" y="199" text-anchor="middle" dominant-baseline="central">Rank the day</text><text class="s" x="138" y="218" text-anchor="middle" dominant-baseline="central">AI sorts, you cut</text></g>
+<line class="a" x1="218" y1="208" x2="258" y2="208" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="262" y="180" width="156" height="56" rx="8"/><text class="t" x="340" y="199" text-anchor="middle" dominant-baseline="central">Write resume.md</text><text class="s" x="340" y="218" text-anchor="middle" dominant-baseline="central">Only for the keepers</text></g>
+<line class="a" x1="420" y1="208" x2="460" y2="208" marker-end="url(#fig-arrow)"/>
+<g class="b mint"><rect x="464" y="180" width="156" height="56" rx="8"/><text class="t" x="542" y="199" text-anchor="middle" dominant-baseline="central">Pair on file</text><text class="s" x="542" y="218" text-anchor="middle" dominant-baseline="central">JD.md + resume.md</text></g>
+<line class="a" x1="542" y1="238" x2="542" y2="296" marker-end="url(#fig-arrow)"/>
+<g class="b mint"><rect x="60" y="300" width="560" height="56" rx="8"/><text class="t" x="340" y="319" text-anchor="middle" dominant-baseline="central">When someone calls</text><text class="s" x="340" y="338" text-anchor="middle" dominant-baseline="central">Open the folder and prepare from the two files; no need to ask which role it was</text></g>
+</svg>

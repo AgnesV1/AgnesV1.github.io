@@ -1,5 +1,5 @@
 ---
-title: 'How I Built This Site'
+title: 'How I Built This Site 🧱🌐'
 description: 'Astro + GitHub Pages + Markdown: publishing a post takes one git push.'
 pubDate: 2026-07-09
 lang: en

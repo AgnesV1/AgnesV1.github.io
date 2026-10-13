@@ -1,0 +1,29 @@
+<svg class="fig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 376" width="100%" role="img" aria-label="From a pile of files to yearly lines: gather every format into one corpus, clean it, sample paragraphs, code each one, aggregate by year, check the result with a second sample, then read it by time of day and season where timestamps exist.">
+<style>.fig{font-family:var(--font-body,-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif)}
+.fig .t{font-size:14px;font-weight:600;fill:var(--tx,#26232e)}
+.fig .s{font-size:12px;fill:var(--tx-2,#6f687c)}
+.fig .b rect{fill:color-mix(in srgb,var(--c) 11%,var(--bg,#fffcf7));stroke:var(--c);stroke-width:1}
+.fig .lav{--c:var(--lav,#6d5ae6)}
+.fig .mint{--c:var(--mint,#1d9e76)}
+.fig .coral{--c:var(--coral,#d94f3b)}
+.fig .plain rect{fill:var(--bg-soft,#f5f0e8);stroke:color-mix(in srgb,var(--tx-2,#6f687c) 40%,var(--bg,#fffcf7))}
+.fig .a{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:1.5}
+.fig .f{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:.75;stroke-dasharray:4 4;opacity:.7}
+.fig marker path{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}</style>
+<defs><marker id="fig-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9"/></marker></defs>
+<rect class="f" x="40" y="30" width="600" height="226" rx="12"/>
+<text class="t" x="60" y="52" text-anchor="start" dominant-baseline="central">From a pile of files to yearly lines</text><text class="s" x="358" y="52" text-anchor="start" dominant-baseline="central">everything stays on your machine</text>
+<g class="b lav"><rect x="60" y="70" width="156" height="56" rx="8"/><text class="t" x="138" y="89" text-anchor="middle" dominant-baseline="central">Gather</text><text class="s" x="138" y="108" text-anchor="middle" dominant-baseline="central">All formats, one pile</text></g>
+<line class="a" x1="218" y1="98" x2="258" y2="98" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="262" y="70" width="156" height="56" rx="8"/><text class="t" x="340" y="89" text-anchor="middle" dominant-baseline="central">Clean</text><text class="s" x="340" y="108" text-anchor="middle" dominant-baseline="central">Keep only your own</text></g>
+<line class="a" x1="420" y1="98" x2="460" y2="98" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="464" y="70" width="156" height="56" rx="8"/><text class="t" x="542" y="89" text-anchor="middle" dominant-baseline="central">Sample</text><text class="s" x="542" y="108" text-anchor="middle" dominant-baseline="central">120 paragraphs a year</text></g>
+<path class="a" d="M542 128 L542 153 L138 153 L138 176" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="60" y="180" width="156" height="56" rx="8"/><text class="t" x="138" y="199" text-anchor="middle" dominant-baseline="central">Code</text><text class="s" x="138" y="218" text-anchor="middle" dominant-baseline="central">Six fields each</text></g>
+<line class="a" x1="218" y1="208" x2="258" y2="208" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="262" y="180" width="156" height="56" rx="8"/><text class="t" x="340" y="199" text-anchor="middle" dominant-baseline="central">Aggregate</text><text class="s" x="340" y="218" text-anchor="middle" dominant-baseline="central">Shares by year</text></g>
+<line class="a" x1="420" y1="208" x2="460" y2="208" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="464" y="180" width="156" height="56" rx="8"/><text class="t" x="542" y="199" text-anchor="middle" dominant-baseline="central">Check</text><text class="s" x="542" y="218" text-anchor="middle" dominant-baseline="central">Redo with new sample</text></g>
+<line class="a" x1="542" y1="238" x2="542" y2="296" marker-end="url(#fig-arrow)"/>
+<g class="b mint"><rect x="60" y="300" width="560" height="56" rx="8"/><text class="t" x="340" y="319" text-anchor="middle" dominant-baseline="central">Read it by the clock too</text><text class="s" x="340" y="338" text-anchor="middle" dominant-baseline="central">Where timestamps exist, compare times of day and seasons</text></g>
+</svg>

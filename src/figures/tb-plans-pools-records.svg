@@ -1,0 +1,24 @@
+<svg class="fig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 358" width="100%" role="img" aria-label="Three kinds of things: plans, pools you pick from, and records of what happened, all meeting on Today.">
+<style>.fig{font-family:var(--font-body,-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif)}
+.fig .t{font-size:14px;font-weight:600;fill:var(--tx,#26232e)}
+.fig .s{font-size:12px;fill:var(--tx-2,#6f687c)}
+.fig .b rect{fill:color-mix(in srgb,var(--c) 11%,var(--bg,#fffcf7));stroke:var(--c);stroke-width:1}
+.fig .lav{--c:var(--lav,#6d5ae6)}
+.fig .mint{--c:var(--mint,#1d9e76)}
+.fig .coral{--c:var(--coral,#d94f3b)}
+.fig .plain rect{fill:var(--bg-soft,#f5f0e8);stroke:color-mix(in srgb,var(--tx-2,#6f687c) 40%,var(--bg,#fffcf7))}
+.fig .a{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:1.5}
+.fig .f{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:.75;stroke-dasharray:4 4;opacity:.7}
+.fig marker path{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}</style>
+<defs><marker id="fig-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9"/></marker></defs>
+<g class="b lav"><rect x="60" y="40" width="260" height="76" rx="8"/><text class="t" x="190" y="60" text-anchor="middle" dominant-baseline="central">Plans</text><text class="s" x="190" y="80" text-anchor="middle" dominant-baseline="central">A list of items, or a rhythm</text><text class="s" x="190" y="98" text-anchor="middle" dominant-baseline="central">Placed Auto or in the Pool</text></g>
+<g class="b coral"><rect x="360" y="40" width="260" height="76" rx="8"/><text class="t" x="490" y="60" text-anchor="middle" dominant-baseline="central">Pools</text><text class="s" x="490" y="80" text-anchor="middle" dominant-baseline="central">No date until you pick one</text><text class="s" x="490" y="98" text-anchor="middle" dominant-baseline="central">Tasks · Ideas · Want list · To try</text></g>
+<line class="a" x1="190" y1="118" x2="190" y2="168" marker-end="url(#fig-arrow)"/>
+<text class="s" x="200" y="143" text-anchor="start" dominant-baseline="central">repeats show up by themselves</text>
+<line class="a" x1="490" y1="118" x2="490" y2="168" marker-end="url(#fig-arrow)"/>
+<text class="s" x="500" y="143" text-anchor="start" dominant-baseline="central">you drag or click</text>
+<g class="b plain"><rect x="60" y="172" width="560" height="56" rx="8"/><text class="t" x="340" y="191" text-anchor="middle" dominant-baseline="central">Today</text><text class="s" x="340" y="210" text-anchor="middle" dominant-baseline="central">Only today is written to the sheet; later days are faint previews</text></g>
+<line class="a" x1="340" y1="230" x2="340" y2="278" marker-end="url(#fig-arrow)"/>
+<text class="s" x="350" y="254" text-anchor="start" dominant-baseline="central">mark the result, time it, note why</text>
+<g class="b mint"><rect x="60" y="282" width="560" height="56" rx="8"/><text class="t" x="340" y="301" text-anchor="middle" dominant-baseline="central">Records</text><text class="s" x="340" y="320" text-anchor="middle" dominant-baseline="central">Done / Partial / Later / Drop · actual minutes · clock times · reason</text></g>
+</svg>

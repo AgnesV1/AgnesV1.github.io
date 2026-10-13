@@ -1,7 +1,7 @@
 ---
 title: '关于赵婷'
 description: '看完赵婷（Chloé Zhao）一次采访后的碎碎念：和她偏爱的几位导演比较，聊她刻意维持的柔软人设。'
-pubDate: 2026-07-25
+pubDate: 2026-02-01
 lang: zh
 tags: ['哔哔']
 ---

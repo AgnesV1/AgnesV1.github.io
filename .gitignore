@@ -38,3 +38,6 @@ pnpm-debug.log*
 
 # local design assets (never published)
 *.zip
+
+# local preview of post figures (never published)
+figures-preview.html

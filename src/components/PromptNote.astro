@@ -1,0 +1,30 @@
+---
+// prompt 类文章正文里的一行说明，放在 Scope and limits 后面：这页首先写给 AI 读；由 AI 起草，逻辑和结构是作者的。只有英文。
+// 用法（.mdx 文章）：import PromptNote from '../../components/PromptNote.astro';  然后  <PromptNote />
+const plain = Astro.url.pathname.replace(/\/$/, '') + '.txt';
+---
+
+<aside class="prompt-note">
+	Written for an AI reader first: give your assistant this page's link and ask what applies to you. The diagrams are for
+	people. Drafted by AI; the logic and structure are the author's.
+	<a href={plain}>Plain text ↗</a>
+</aside>
+
+<style>
+	.prompt-note {
+		margin: 1.5rem 0 2rem;
+		padding: 0.7rem 0.9rem;
+		border: 1px dashed color-mix(in srgb, var(--tx-2) 45%, transparent);
+		border-radius: 10px;
+		font-size: 0.88rem;
+		line-height: 1.6;
+		color: var(--tx-2);
+	}
+	.prompt-note a {
+		margin-left: 0.4rem;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		color: var(--tx-2);
+		white-space: nowrap;
+	}
+</style>

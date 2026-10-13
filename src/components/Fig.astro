@@ -1,0 +1,25 @@
+---
+// 文章里的示意图：把 src/figures/<name>.svg 原样内嵌进页面，颜色跟着日夜主题变（图由 scripts/gen-figures.mjs 生成）。
+// 用法（.mdx 文章）：import Fig from '../../components/Fig.astro';  然后  <Fig name="tb-system-map" />
+const svgs = import.meta.glob<string>('../figures/*.svg', { query: '?raw', import: 'default', eager: true });
+
+interface Props {
+	name: string;
+}
+const { name } = Astro.props;
+const svg = svgs[`../figures/${name}.svg`];
+if (!svg) throw new Error(`Fig: 没有这张图 src/figures/${name}.svg`);
+---
+
+<figure class="fig-wrap"><Fragment set:html={svg} /></figure>
+
+<style>
+	.fig-wrap {
+		margin: 1.75rem 0;
+	}
+	.fig-wrap :global(svg) {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+</style>

@@ -1,5 +1,5 @@
 ---
-title: 'the late capitalism of K-pop'
+title: 'the late capitalism of K-pop 🏛️💿'
 description: '一支 17 分钟视频的观看笔记：Kpop 背后的晚期资本主义。'
 pubDate: 2019-06-13
 lang: zh

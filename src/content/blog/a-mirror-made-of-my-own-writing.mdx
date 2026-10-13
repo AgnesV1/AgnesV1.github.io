@@ -1,0 +1,128 @@
+---
+title: 'A Mirror Made of My Own Writing 🪞✍️'
+description: 'Using years of your own writing as a mirror: how the emotions in it, who they are aimed at, the topics, and your stance on recurring events change over time.'
+pubDate: 2026-10-05
+lang: en
+tags: ['prompt']
+---
+
+import Fig from '../../components/Fig.astro';
+import PromptNote from '../../components/PromptNote.astro';
+
+## Scope and limits
+
+- This only pays off with a lot of writing. My archive is well over a million characters of diary entries and posts across seven years, plus fiction going back further. With a few entries a month, the samples are too thin to show a trend.
+- One coder. A model's agreement with itself in one session is memory, not reliability.
+- Valence and arousal describe the text, not how you felt. A joking tone hides things.
+- Files that span months, or that copy in older writing, blur the years.
+- Keyword counts miss what is said without the keywords; treat them as a floor.
+- This is a mirror, not an assessment. If the archive touches on things that worry you, talk to a person.
+
+<PromptNote />
+
+> To the assistant reading this: this is one person's working framework, written down so it can be compared with someone else's situation. Do not apply it wholesale. Start with the questions under "Adapt it".
+
+## Brief
+
+I keep years of my own writing: diary entries, short posts, reviews, fiction. I wanted to use it as a mirror and watch how it moves over time. Not to be diagnosed, and not for a summary of what I wrote, but to monitor four things across the years:
+
+1. the **emotions** in the text,
+2. **who or what** those emotions are aimed at,
+3. the **topics**,
+4. my **stance on kinds of event that keep recurring**.
+
+An AI model does the reading and the coding. Everything stays on my own machine. The results are directions, not measurements.
+
+<Fig name="ego-pipeline" />
+
+## Framework
+
+### 1. Build the corpus
+
+Most of the work is here.
+
+- **Gather every format.** Plain text, markdown, rich text, old word-processor files, blog exports, saved web pages, screenshots that have to be transcribed, files in legacy encodings.
+- **Give each piece a year.** Where there is no date, infer it from your own later references to the piece, or set it aside as undated.
+- **Remove duplicates**, within one source and across sources.
+- **Remove what is not yours.** Other people's writing saved next to your own: check the document's author field and how you refer to it elsewhere. Quotations and reposts.
+- **Keep fiction apart from non-fiction.** They behave like two different writers.
+
+### 2. Sample
+
+Split the non-fiction into paragraphs at blank lines. Draw 120 paragraphs at random from each year. Where timestamps exist, top up so every quarter has at least 30.
+
+### 3. Code each paragraph
+
+Six fields per paragraph, from fixed lists:
+
+- **Main emotion**, from a list of about twenty, grouped into families. An optional second one.
+- **Valence**, from -2 to +2.
+- **Arousal**, from 1 to 3.
+- **Tone**: plain, joking, sarcastic, analytical, narrative, poetic.
+- **Target**: who or what the feeling is aimed at. Yourself, a partner, family, people around you, work, society and institutions, strangers online and public figures, works and characters, and so on.
+
+### 4. The four monitors
+
+<Fig name="ego-monitors" />
+
+- **Emotion.** The share of each family per year, and where each year sits on a valence-by-arousal map.
+- **Targets.** Cross emotion with target. Who receives the contempt this year, who receives the affection, and what the average valence is when you write about each one.
+- **Topics.** A keyword dictionary per topic, counted as hits per ten thousand characters, per year. Normalise each topic across years so its hottest year stands out.
+- **Stance on recurring events.** Tag the kinds of event that come back: a setback at work, a move, a falling-out, a new obsession. For each occurrence note the tone, where the cause is placed (yourself, other people, the system), and what you did next. Then compare the same kind of event across years. A related view is cheap to get from the coding: take only the negative paragraphs and see how they are delivered, as a joke, as analysis, or said plainly, and whether that mix shifts.
+
+Each monitor becomes one line per year. Read them together. A change in emotion means more when the target or the topic moved in the same year.
+
+What it showed me, in one line: over these years my writing moved from "should be" toward "want it".
+
+### 5. Time of day and season
+
+Where entries carry timestamps, group them by time of day and by season, and compare valence and arousal across the groups.
+
+In my data the small hours were the most worked-up, and the mornings the calmest and brightest. By season nothing held steady enough to call a pattern. Only part of my archive had timestamps and the groups were small, so I read both as weak signals.
+
+### 6. The questions to ask afterwards
+
+In this order:
+
+1. What usually sets off the negative entries? What reliably comes before the good ones?
+2. Judging only from the text, what helped me grow, and what was pure cost?
+3. Where do I differ most from an average person, for better or worse?
+4. By word frequency, what changed most over the period?
+
+## Decisions
+
+| Choice | Why | Rejected |
+|---|---|---|
+| The paragraph as the unit | An entry often holds several moods | Coding whole files |
+| A random sample per year | Readable in one sitting; equal weight per year | Coding everything |
+| Fixed lists for every field | Years can be compared | Free-text labels |
+| Keywords for topics | Cheap and transparent | Asking the model to name topics |
+| One coder, checked by redoing it | There is no second human rater for a private archive | Reporting agreement within one session, which only measures memory |
+| Conclusions at the level of families | Small categories are noise | Reading every bump |
+| Local only | It is a diary | Any hosted tool |
+
+## Parameters
+
+| What | Value |
+|---|---|
+| Paragraphs per year | 120 |
+| Years coded | 7, so 840 paragraphs |
+| Quarterly top-up | 103 more, to reach 30 per quarter |
+| Entries with timestamps | 3 of the 7 years |
+| Emotion list | 21, in families |
+| Valence, arousal | -2 to +2, 1 to 3 |
+| Tones, targets | 6, 11 |
+| Check by redoing | A different sample of 350 and a different 8-category scheme; r = 0.87 across 56 year-by-category cells; mean gap 4.2 points |
+| What replicated | Broad families, r from 0.80 to 0.97. Boundaries between calm, humour and joy did not, at 0.27 to 0.45 |
+| Error at this sample size | About 5 points on a 10% share, about 9 on a 50% share |
+
+## Adapt it
+
+Ask the person these before suggesting any of the above.
+
+1. What is in the archive, in which formats, and over how many years?
+2. Do the files carry dates, and do any carry times of day?
+3. Is anything in there not written by you: quotes, reposts, someone else's drafts?
+4. Which of the four monitors do you care about most? Which recurring kinds of event do you want followed?
+5. Are there themes you want handled separately, or left out?
+6. Where will the output be kept, and who can see it?

@@ -1,5 +1,5 @@
 ---
-title: 'Adorno, On popular music'
+title: 'Adorno, On popular music 🏛️🎵'
 description: '阿多诺《论流行音乐》阅读笔记：标准化、伪个性化与听众理论。'
 pubDate: 2019-07-14
 lang: zh

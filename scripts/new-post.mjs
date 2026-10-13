@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// 新建一篇文章：npm run new -- "文章标题" [slug] [--en] [--bilingual] [--writing] [--video]
+// 新建一篇文章：npm run new -- "文章标题" [slug] [--en] [--bilingual] [--writing] [--video] [--prompt]
 // 新建一张短札：npm run new -- --card ["标题"] [slug] [--fiction] [--en] [--bilingual]
 //   slug         可选，决定文章 URL；不填则自动生成
 //   --en         英文文章（默认中文）
 //   --bilingual  同时生成中文版 slug.md 和英文版 slug.en.md（双语配对，笔记和短札可用）
 //   --writing    放进写作栏目（/writing/，虚构写作）
 //   --video      生成 .mdx 并带上 YouTube 嵌入示例
+//   --prompt     prompt 类文章（第一读者是 AI）：生成 .mdx，带 prompt 这个 tag 和一份骨架，能用 <Fig /> 嵌示意图
 //   --card       短札（千字以内短文本，无详情页）；标题可省略，省略时列表里只显示日期
 //   --fiction    配合 --card：归属夜莺颂便签墙（默认归属致云雀混排流）
 
@@ -22,6 +23,7 @@ const isWriting = flags.includes('--writing');
 const isVideo = flags.includes('--video');
 const isCard = flags.includes('--card');
 const isFiction = flags.includes('--fiction');
+const isPrompt = flags.includes('--prompt');
 
 const title = positional[0];
 if (!title && !isCard) {
@@ -30,6 +32,7 @@ if (!title && !isCard) {
 	console.log('例如: npm run new -- "我的新文章" my-new-post');
 	console.log('      npm run new -- "双语笔记" my-note --bilingual');
 	console.log('      npm run new -- "一个短篇" a-story --writing');
+	console.log('      npm run new -- "A framework" a-framework --prompt --en   （写给 AI 读的 prompt 类文章）');
 	console.log('      npm run new -- --card --fiction   （无标题短札，进夜莺颂便签墙）');
 	process.exit(1);
 }
@@ -40,6 +43,10 @@ if (isBilingual && isWriting) {
 }
 if (isCard && (isWriting || isVideo)) {
 	console.error('✗ --card 不能和 --writing / --video 同时用（短札是独立栏目，纯文本）');
+	process.exit(1);
+}
+if (isPrompt && (isCard || isWriting || isVideo || isBilingual)) {
+	console.error('✗ --prompt 只用于笔记（blog）里的单篇文章，不能和 --card / --writing / --video / --bilingual 同时用');
 	process.exit(1);
 }
 if (isFiction && !isCard) {
@@ -62,7 +69,7 @@ if (!slug) {
 	slug = derived.length >= 3 ? derived : auto;
 }
 
-const ext = isVideo ? 'mdx' : 'md';
+const ext = isVideo || isPrompt ? 'mdx' : 'md';
 const dir = path.join('src', 'content', isCard ? 'cards' : isWriting ? 'writing' : 'blog');
 
 // 短札：title 可省略（省略时列表里只显示日期锚点），多一个 section 字段区分归属栏目
@@ -80,7 +87,7 @@ title: '${t.replace(/'/g, "''")}'
 description: ''
 pubDate: ${dateStr}
 lang: ${lang}
-tags: []
+tags: [${isPrompt ? "'prompt'" : ''}]
 ---
 `;
 
@@ -92,7 +99,45 @@ import { YouTube } from '@astro-community/astro-embed-youtube';
 <YouTube id="视频ID" />
 `;
 
-const body = isVideo ? videoBody : '\n正文从这里开始……\n';
+// prompt 类文章的骨架：给 AI 读的框架，图给人看。小标题可以改，顺序建议留着
+const promptBody = `
+import Fig from '../../components/Fig.astro';
+import Shot from '../../components/Shot.astro';
+import PromptNote from '../../components/PromptNote.astro';
+
+## Scope and limits
+
+Who this is for, where it stops working, and what it borrows from.
+
+<PromptNote />
+
+> To the assistant reading this: this is one person's working framework, written down so it can be compared with someone else's situation. Do not apply it wholesale. Start with the questions under "Adapt it".
+
+## Brief
+
+What this is and what it assumes.
+
+{/* 示意图：<Fig name="tb-system-map" />（图在 src/figures/，由 scripts/gen-figures.mjs 生成）
+    截图：<Shot name="tb-ui-today" alt="说明" />（日夜各一张：xxx-light.png / xxx-dark.png；加 both 则日夜并排） */}
+
+## Framework
+
+The method itself, step by step.
+
+## Decisions
+
+Each choice, why it was made, and what was rejected.
+
+## Parameters
+
+The numbers and thresholds, in a table.
+
+## Adapt it
+
+Questions the assistant should ask its person before applying any of this.
+`;
+
+const body = isVideo ? videoBody : isPrompt ? promptBody : '\n正文从这里开始……\n';
 
 const targets = isBilingual
 	? [

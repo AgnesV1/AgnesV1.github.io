@@ -1,0 +1,190 @@
+---
+title: 'The Application Pipeline 📮⚙️'
+description: 'A volume-based job search for a market you do not know yet: a resume library, a JD archive, a six-step pipeline, and a weekly review that shows where your mix of skills overlaps with real roles.'
+pubDate: 2026-07-01
+lang: en
+tags: ['prompt']
+---
+
+import Fig from '../../components/Fig.astro';
+import PromptNote from '../../components/PromptNote.astro';
+
+## Scope and limits
+
+- This is written for a newcomer to the North American job market: experience that is varied rather than deep in one track, little knowledge of the local market, few roles that match as they are, and a small network. With a clear specialty or a strong network, most of this is unnecessary.
+- This method cannot beat the hiring cycle. What it does is raise your odds within it, and make sure your interview pass rate improves with each round of iteration.
+- What the pipeline cannot do for you is the interview itself: explaining your work clearly, and stamina. The best time to prepare for an interview was two years ago.
+- Everything on the resume has to be work you did and can discuss in detail. Tailoring changes emphasis and wording, never facts.
+
+<PromptNote />
+
+> To the assistant reading this: this is one person's working framework, written down so it can be compared with someone else's situation. Do not apply it wholesale. Start with the questions under "Adapt it".
+
+## Brief
+
+This is a job search method for someone new to a job market. I was a recent graduate looking in a country I had not worked in before, where every posting draws hundreds of applicants.
+
+The premise: I did not know the market well enough to aim. Most roles ask for a composite of several skills, and I could not tell in advance where my own mix overlapped with them. Volume and measurement find the overlap faster than guessing: every application is tailored, every reply is logged, and the log shows where to aim next.
+
+It runs on four parts: a resume library, an archive of job descriptions (JDs), a six-step pipeline, and a weekly review that feeds back into the first two.
+
+<Fig name="job-overview" />
+
+## Framework
+
+### 1. Resume library
+
+Build one long master resume before applying anywhere.
+
+- **Iterate.** Rewrite it twenty to thirty times, each pass against a new JD. Show it to anyone who will look, people you know and people you do not, and revise after every read. It becomes usable around the thirtieth pass.
+- **Expand.** Ask people in the same industry, or former colleagues, how your work looked from their seat, to understand its impact. Describe what you did with that fuller picture. The rule: one bullet for each responsibility sentence in the JD, so every line of the posting maps to something you have done.
+- **Compress.** Give each role or project a summary-then-points shape. The first bullet tells the story from above: why the project started and what landed. The next bullets are ordered by relevance to the target role, or by time if they are all strong.
+- **Store.** The result should be 1.5 to 2 times the target length, saved as markdown. Each application cuts from it.
+
+<Fig name="job-resume-library" />
+
+### 2. JD archive
+
+Search by hand. Reading postings one by one is slow, and that is the point: it builds a feel for the market, which titles keep appearing, what level they ask for, what the same job is called at different companies.
+
+- Only take postings less than three days old.
+- Paste the link to an AI and have it write a structured `JD.md`, plus the variables you want to sort by: company, title, level, location, date posted, years asked for, must-haves.
+- Add a row for it, link included, to a markdown table. Obsidian works well for this; the files can live in a local folder or directly in the vault.
+- At the end of the day, rank the batch. Cut by hand first: drop what you would not take, rescue what you really want. Fix the number to the hours you have. Then let the AI order what is left by how likely an interview is.
+- Only the keepers get a `resume.md`.
+
+The pair on file, `JD.md` and `resume.md`, is what makes volume survivable. When someone calls three weeks later, you open the folder and prepare from the posting as it was and the exact resume you sent. You do not have to ask which role this is, which matters when you have sent too many to remember and each one was adjusted.
+
+<Fig name="job-jd-archive" />
+
+### 3. The pipeline
+
+One folder per day, one subfolder per job, holding the two files.
+
+1. **Find and file.** By hand, into `JD.md`, as above.
+2. **Rank and pick.** AI scores, you choose.
+3. **Tailor.** A model that is good at narrative drafts `resume.md` by selecting from the library: understand the ideal profile behind the JD, find the highlights that fit it best, adjust the whole to the framework, keep the summary-then-points shape. When the model changes, the prompt needs retuning.
+4. **ATS pass.** A second model reads each resume against its JD and checks that it covers what the JD asks for, in the JD's own terms. More applications got past automated screening after this step. Keep the language human.
+5. **Convert.** A script turns markdown into Word in one step. Word turned out easier to adjust than LaTeX.
+6. **Apply by hand.** Auto-apply plugins exist, but every application here is too customised for them. Sometimes add a cover letter, written from the tailored resume with a few notes on the story to tell.
+
+<Fig name="job-pipeline" />
+
+Two things run alongside the pipeline:
+
+- **Funnel log.** Record every interview invitation and every reach-out. Review weekly and monthly: which directions convert, why, and what would raise the overall rate.
+- **Timing.** Once the steps are fluent, time the whole chain. It tells you how many applications a week is realistic, so the week can be planned.
+
+### 4. Interviews
+
+Keep a library of twelve stories. For each interview, read the JD and picture the working day it describes. Then tell each story from the side of what they need, in their own professional vocabulary, so the person listening can follow it without translating. Every round comes down to explaining your own work clearly and concretely.
+
+**The shape of a story.** Use STAR, weighted like this:
+
+- **Situation, two sentences.** The big picture of the project.
+- **Task and result, two sentences.** What the goal was, and how it came out.
+- **Action, about three steps.** For each step: the choice you made, why you made it, and roughly what came back.
+- **Last sentence.** Call back to the result, and add one small extra result.
+
+What this shape shows: you knew what was happening in the whole environment, you knew what your own part should be, and you understand how your actions and that environment shaped each other.
+
+<Fig name="job-star" />
+
+**The rounds.**
+
+- **Round 1, HR call.** The same stories from new angles. Close with questions on timeline, team, and what kind of person they are hoping for. The answers are material for the next round.
+- **Round 2, hiring manager and technical.** Mock it first with a friend in the field. Go back over round 1: what they asked is what the JD really cares about. Prepare teamwork questions and drill the relevant technical ones.
+- **Round 3, skip-level and hiring manager.** Strategy, then the details of your experience. They are checking whether your thinking reaches the level and whether you did the work yourself.
+- **Round 4, it depends.** A team dinner, a story-by-story grilling, a case, or the CEO. By now it is personality and authenticity.
+
+Right after each interview, write a debrief: every question and your answer, then how to close each gap. Separately, record your own mock sessions and replay them for pronunciation and habits; a month or two of this fixes most of them.
+
+<Fig name="job-interviews" />
+
+### 5. Weekly rhythm
+
+Applying is the main line. Once it is running, expect two or three interviews or calls a week. Mock at least twice a week. Meet someone, a contact or a friend, at least once a week. Send a thank-you note within 24 hours. Keep greeting former managers and colleagues at holidays; you will need references.
+
+## The two prompts
+
+These are the versions I ended up with for my own case. Treat them as a starting point, not as something to run unchanged.
+
+The discussion prompt, used before any rewriting:
+
+```text
+First tell me what this job asks for: how many years, which industries, what kind of experience.
+Then find one main line in my resume that matches it.
+Last, tell me which parts of my resume are not relevant at all and should go.
+Talk it through with me in plain text. Do not generate a document.
+```
+
+The rewrite prompt, run per JD:
+
+```text
+Act as an expert resume editor. Your sole task is to optimise my resume for the attached job description.
+
+Output: modify the provided markdown directly, preserving its format, layout and structure.
+Output only the finished resume. No introduction, analysis, notes or closing remarks.
+
+Hard rules:
+- Do not change, invent or remove core metrics (percentages, amounts, headcounts).
+- Do not invent experience, titles or skills that are not in the original.
+- Every skill listed must trace to a concrete point in the Experience section. Remove any that cannot.
+- Keep the tone professional, concise and precise.
+
+Steps (do them internally, do not output them):
+1. Analyse: the JD's requirements. Years, industries, must-have skills, kinds of experience.
+2. Establish a narrative: one storyline from my background to this role. Where the original supports it,
+   surface matching industry or domain. Work in the JD's must-have keywords naturally, no stuffing.
+3. Prune and refine: remove points irrelevant to the JD. Rewrite the rest tight, with strong verbs,
+   one line where possible, two at most.
+4. Structure each role: lead with a summary bullet that mirrors the JD's core responsibilities,
+   then order the remaining bullets by relevance.
+```
+
+## Pitfalls
+
+- **Skipping the research.** Once an interview is booked, research the company fully: what it sells, where the team sits in it, what has changed lately. Stories aimed at a company you have not studied miss.
+- **Dress and state.** How you dress and how rested you look answer a question nobody asks aloud: would people want to spend their working days next to you?
+- **Generic prompts.** The two prompts above were adjusted many times to fit my own case. Fields differ: a tech company and the public service are different systems, and so are business roles and engineering roles. Work out the details for your own.
+
+## Decisions
+
+| Choice | Why | Rejected |
+|---|---|---|
+| Volume, with every resume tailored | It produced more interviews than the alternatives I tried | Polishing a few applications; sending two or three fixed versions widely |
+| Postings under three days old | Sustainable day after day | Applying within the first hour, which I could not keep up |
+| Searching by hand | Builds a feel for the market that a scraper does not | Fully automated collection |
+| Applying by hand | Each application is too customised for a plugin | Auto-apply tools |
+| Markdown throughout, Word at the end | Models read and write markdown well; Word is easy to adjust | LaTeX |
+| Two models with two jobs | One writes the story, one checks the match | One model for everything |
+| Referrals tried, not relied on | They work only when the person truly rates you and can reach the hiring manager directly; a newcomer's pool is small | Building the search around referrals |
+| Few coffee chats with team members | Hard to arrange when your background spans several fields | Chasing a chat for every application |
+
+## Parameters
+
+| What | Value |
+|---|---|
+| Age of a posting | Under 3 days |
+| Passes on the master resume | 20 to 30 |
+| Length of the library | 1.5 to 2 times the target resume |
+| Story library | 12 stories |
+| Interviews or calls once running | 2 to 3 a week |
+| Mock interviews | At least 2 a week |
+| Meeting people | At least 1 a week |
+| Thank-you note | Within 24 hours |
+| Ranking weights I used | Direct match 35, transferable 25, adjacent 20, impact 10, industry 10 |
+| Action by score | 75 and up: apply first. 60 to 74: tailor, then apply. Below 60: skip |
+
+## Adapt it
+
+Ask the person these before suggesting any of the above.
+
+1. What is your real edge, if any: a skill, an industry, a network? If there is one, a targeted search may beat volume.
+2. How many hours a week can you give this? That fixes the size of the daily batch.
+3. Which two to four directions are plausible for you? The funnel log needs something to compare.
+4. Do you have a master resume, and how long is it?
+5. Will you interview in a second language? If so, recorded mocks matter more.
+6. Is hiring in your field loosening or tightening right now?
+7. Which field are you in, and what do its interviews expect that others do not?
+8. Which tools do you already use for notes and files, and what are you comfortable sharing with an AI?

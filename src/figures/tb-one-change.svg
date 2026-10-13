@@ -1,0 +1,27 @@
+<svg class="fig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 606" width="100%" role="img" aria-label="The path of one change: tapped on a device, saved locally, sent in a batch, checked and written by the script, then pulled by the other device.">
+<style>.fig{font-family:var(--font-body,-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif)}
+.fig .t{font-size:14px;font-weight:600;fill:var(--tx,#26232e)}
+.fig .s{font-size:12px;fill:var(--tx-2,#6f687c)}
+.fig .b rect{fill:color-mix(in srgb,var(--c) 11%,var(--bg,#fffcf7));stroke:var(--c);stroke-width:1}
+.fig .lav{--c:var(--lav,#6d5ae6)}
+.fig .mint{--c:var(--mint,#1d9e76)}
+.fig .coral{--c:var(--coral,#d94f3b)}
+.fig .plain rect{fill:var(--bg-soft,#f5f0e8);stroke:color-mix(in srgb,var(--tx-2,#6f687c) 40%,var(--bg,#fffcf7))}
+.fig .a{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:1.5}
+.fig .f{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:.75;stroke-dasharray:4 4;opacity:.7}
+.fig marker path{fill:none;stroke:var(--tx-2,#6f687c);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}</style>
+<defs><marker id="fig-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9"/></marker></defs>
+<g class="b lav"><rect x="120" y="30" width="280" height="56" rx="8"/><text class="t" x="260" y="49" text-anchor="middle" dominant-baseline="central">You tap Done</text><text class="s" x="260" y="68" text-anchor="middle" dominant-baseline="central">Same on phone or laptop</text></g>
+<line class="a" x1="260" y1="88" x2="260" y2="126" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="120" y="130" width="280" height="56" rx="8"/><text class="t" x="260" y="149" text-anchor="middle" dominant-baseline="central">store.js updates the data</text><text class="s" x="260" y="168" text-anchor="middle" dominant-baseline="central">Saved locally at once, marked pending</text></g>
+<line class="a" x1="260" y1="188" x2="260" y2="226" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="120" y="230" width="280" height="56" rx="8"/><text class="t" x="260" y="249" text-anchor="middle" dominant-baseline="central">sync.js sends a batch</text><text class="s" x="260" y="268" text-anchor="middle" dominant-baseline="central">Changes within 2.5 s go together</text></g>
+<line class="a" x1="402" y1="258" x2="446" y2="258" marker-end="url(#fig-arrow)"/>
+<g class="b plain"><rect x="450" y="230" width="180" height="56" rx="8"/><text class="t" x="540" y="249" text-anchor="middle" dominant-baseline="central">Cannot send?</text><text class="s" x="540" y="268" text-anchor="middle" dominant-baseline="central">Stays local, retried</text></g>
+<line class="a" x1="260" y1="288" x2="260" y2="326" marker-end="url(#fig-arrow)"/>
+<g class="b mint"><rect x="120" y="330" width="280" height="56" rx="8"/><text class="t" x="260" y="349" text-anchor="middle" dominant-baseline="central">Code.gs checks the request</text><text class="s" x="260" y="368" text-anchor="middle" dominant-baseline="central">Secret, version, one writer at a time</text></g>
+<line class="a" x1="260" y1="388" x2="260" y2="426" marker-end="url(#fig-arrow)"/>
+<g class="b mint"><rect x="120" y="430" width="280" height="56" rx="8"/><text class="t" x="260" y="449" text-anchor="middle" dominant-baseline="central">Sheet is written, reply sent</text><text class="s" x="260" y="468" text-anchor="middle" dominant-baseline="central">Per row, the later edit wins</text></g>
+<line class="a" x1="260" y1="488" x2="260" y2="526" marker-end="url(#fig-arrow)"/>
+<g class="b lav"><rect x="120" y="530" width="280" height="56" rx="8"/><text class="t" x="260" y="549" text-anchor="middle" dominant-baseline="central">The other device picks it up</text><text class="s" x="260" y="568" text-anchor="middle" dominant-baseline="central">Pulls only rows changed since last sync</text></g>
+</svg>

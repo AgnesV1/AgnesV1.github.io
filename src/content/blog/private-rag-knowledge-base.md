@@ -1,5 +1,5 @@
 ---
-title: 'Notes on Building a Private RAG Q&A'
+title: 'Notes on Building a Private RAG Q&A 🗄️🔎'
 description: 'A rough log of the reasoning chain behind a personal RAG tool over Google Drive and Notion: what it is for, what has to be configured, and how the pipeline is wired.'
 pubDate: 2026-07-26
 lang: en

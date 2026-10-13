@@ -1,5 +1,5 @@
 ---
-title: 'Rian Doris'
+title: 'Rian Doris 🧠🌊'
 description: 'Rian Doris 访谈笔记：动机、决策自动化、拖延、心流与注意力。'
 pubDate: 2024-03-31
 lang: zh
