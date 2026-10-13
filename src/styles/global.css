@@ -238,6 +238,59 @@ body::after {
 	}
 }
 
+/* ===== 切换日夜的过场（ThemeToggle.astro）=====
+   整页约 1.3 秒淡过去；底边泛一阵霞光（.dusk，脚本临时挂上、播完拿掉，平时不存在；data-k 分朝霞 / 晚霞两种颜色）。
+   霞光的明暗放在 ::before 上、元素本身不带效果，这样它在过渡里照自己的节奏走，不跟着整页一起淡。 */
+html[data-vt='theme']::view-transition-old(root),
+html[data-vt='theme']::view-transition-new(root) {
+	animation-duration: 1.3s;
+	animation-timing-function: ease;
+}
+::view-transition-new(dusk) {
+	animation: none;
+}
+.dusk {
+	position: fixed;
+	inset: auto 0 0;
+	z-index: 50;
+	height: 75vh;
+	pointer-events: none;
+	view-transition-name: dusk;
+}
+.dusk::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	animation: dusk 1.6s ease both;
+}
+/* 朝霞（切到日间）：杏黄 → 珊瑚；晚霞（切到夜间）：玫瑰 → 薰衣草 → 一点蓝 */
+.dusk[data-k='dawn']::before {
+	background: radial-gradient(
+		65% 100% at 50% 100%,
+		rgba(255, 214, 130, 0.66),
+		rgba(255, 160, 120, 0.36) 45%,
+		transparent 77%
+	);
+}
+.dusk[data-k='dusk']::before {
+	background: radial-gradient(
+		65% 100% at 50% 100%,
+		rgba(240, 140, 170, 0.5),
+		rgba(150, 130, 240, 0.36) 45%,
+		rgba(90, 150, 220, 0.16) 62%,
+		transparent 79%
+	);
+}
+@keyframes dusk {
+	35% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
 /* ===== 栏目引言诗句 =====
    比页头站名明显小一号、颜色淡。词级微彩由 Verse.astro 负责（一词一色的克制版），
    这里只管字形；直接写纯文本时就是安静的灰字 */

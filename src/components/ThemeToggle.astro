@@ -62,10 +62,32 @@
 </style>
 
 <script>
+	// 切换时的过场：整页慢慢淡过去（同文档 View Transition，只在点这个按钮时用），底边泛一阵霞光（.dusk，样式在 global.css）。
+	// 系统要求减少动态就直接换；浏览器不支持过渡时也直接换，霞光照常泛一下
+	const root = document.documentElement;
 	const btn = document.getElementById('theme-toggle');
+	const calm = matchMedia('(prefers-reduced-motion: reduce)');
 	btn?.addEventListener('click', () => {
-		const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-		document.documentElement.dataset.theme = next;
-		localStorage.setItem('theme', next);
+		const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+		const apply = () => {
+			root.dataset.theme = next;
+			localStorage.setItem('theme', next);
+		};
+		if (calm.matches) return apply();
+		document.querySelector('.dusk')?.remove();
+		const glow = document.createElement('div');
+		glow.className = 'dusk';
+		glow.dataset.k = next === 'dark' ? 'dusk' : 'dawn'; // 切到夜间是晚霞，切到日间是朝霞
+		glow.setAttribute('aria-hidden', 'true');
+		const swap = () => {
+			apply();
+			document.body.append(glow);
+			setTimeout(() => glow.remove(), 1800);
+		};
+		if (!document.startViewTransition) return swap();
+		root.dataset.vt = 'theme';
+		const vt = document.startViewTransition(swap);
+		vt.ready.catch(() => {});
+		vt.finished.finally(() => delete root.dataset.vt).catch(() => {});
 	});
 </script>
