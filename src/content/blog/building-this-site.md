@@ -72,6 +72,6 @@ The theme is one attribute, `data-theme`, on the `<html>` element. A few lines o
 
 The five accent colours are CSS variables, defined once for day and once for night. The backdrop is CSS gradients and nothing else: watercolour clouds by day, a field of stars by night, with no image files. Switching between them takes about three seconds, paced like a sunrise: the whole page fades across, a band of dawn or dusk light rises from the bottom edge, and the sun sets as the moon comes up in its place.
 
-Now and then something small crosses the backdrop: a plane every few minutes, petals by day, a meteor shower by night, one thing at a time.
+Now and then something small crosses the backdrop, one thing at a time: a plane every few minutes, a low tide washing into the bottom corner, something in season drifting down by day (young leaves, carnations, maple leaves, snow) and a meteor shower by night.
 
 If the system asks for reduced motion, all of it stays still.
