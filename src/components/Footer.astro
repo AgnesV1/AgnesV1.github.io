@@ -1,5 +1,6 @@
 ---
 import { GITHUB_URL, SITE_TITLE, YOUTUBE_URL } from '../consts';
+import Sky from './Sky.astro';
 
 const today = new Date();
 ---
@@ -28,6 +29,9 @@ const today = new Date();
 		</span>
 	</p>
 </footer>
+
+<!-- 底图上偶尔经过的飞机 / 花瓣 / 流星雨：页脚每页都有，放这里就全站生效 -->
+<Sky />
 
 <script>
 	import { SITE_TITLE } from '../consts';

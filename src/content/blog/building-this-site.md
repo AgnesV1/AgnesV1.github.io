@@ -2,7 +2,7 @@
 title: 'How I Built This Site 🧱🌐'
 description: 'Astro + GitHub Pages + Markdown: publishing a post takes one git push.'
 pubDate: 2026-07-09
-updatedDate: 2026-10-12
+updatedDate: 2026-10-13
 lang: en
 tags: ['dev']
 ---
@@ -68,8 +68,10 @@ At build time each picture is cropped to a small circle around its most interest
 
 ## Day and night
 
-The theme is one attribute, `data-theme`, on the `<html>` element. A few lines of inline script in the `<head>` set it before any styles apply, from the saved choice or the system setting, so the page never flashes the wrong colours.
+The theme is one attribute, `data-theme`, on the `<html>` element. A few lines of inline script in the `<head>` set it before any styles apply, so the page never flashes the wrong colours. It follows the reader's own clock: day from six in the morning, night from six in the evening. The button in the header, a small sun by day and a small moon by night, flips it by hand, and that lasts until the next six o'clock.
 
-The five accent colours are CSS variables, defined once for day and once for night. The backdrop is CSS gradients and nothing else: watercolour clouds by day, a field of stars by night, with no image files. Switching between them takes about a second, the whole page fading across while a band of dawn or dusk light rises from the bottom edge.
+The five accent colours are CSS variables, defined once for day and once for night. The backdrop is CSS gradients and nothing else: watercolour clouds by day, a field of stars by night, with no image files. Switching between them takes about three seconds, paced like a sunrise: the whole page fades across, a band of dawn or dusk light rises from the bottom edge, and the sun sets as the moon comes up in its place.
+
+Now and then something small crosses the backdrop: a plane every few minutes, petals by day, a meteor shower by night, one thing at a time.
 
 If the system asks for reduced motion, all of it stays still.

@@ -1,0 +1,236 @@
+---
+// 底图上偶尔经过的小东西（挂在 Footer.astro 里，所以每一页都有）：
+//   飞机，3–5 分钟一趟：日间是高空的一个小点拖两道长尾迹；夜间是红眼航班——一闪一闪的红灯加一颗小白灯
+//   另一样，10–15 分钟一次：日间飘几片花瓣；夜间一阵流星雨
+// 天上一次只放一样：轮到时还有东西没走完，就等它走完再隔一分钟。
+// 平时只挂一个定时器，没有常驻的动画；东西只动 transform / opacity，放完就拿掉。
+// 页面在后台、系统要求减少动态时不放。这一层和底图的两层同在最底下（z-index: -1），夹在静态层和云 / 亮星之间。
+---
+
+<div id="sky-ev" aria-hidden="true"></div>
+
+<style is:global>
+	#sky-ev {
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		overflow: hidden;
+		pointer-events: none;
+	}
+	.sky-ev {
+		position: absolute;
+		left: 0;
+		top: 0;
+		will-change: transform;
+	}
+	/* 头在右端，绕着头转向；位置和走法都是脚本给的 transform */
+	.sky-plane,
+	.sky-redeye {
+		display: flex;
+		align-items: center;
+		transform-origin: 100% 50%;
+	}
+	.sky-trails {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+	}
+	.sky-trails b {
+		display: block;
+		width: 130px;
+		height: 1px;
+		background: linear-gradient(to left, color-mix(in srgb, var(--tx) 30%, transparent), transparent);
+	}
+	.sky-dot {
+		width: 4px;
+		height: 4px;
+		margin-left: 1px;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--tx) 52%, transparent);
+	}
+	.sky-red {
+		width: 3px;
+		height: 3px;
+		border-radius: 50%;
+		background: #ff5a6e;
+		animation: sky-blink 1.2s steps(1) infinite;
+	}
+	.sky-white {
+		width: 2px;
+		height: 2px;
+		margin-left: 3px;
+		border-radius: 50%;
+		background: #efecf6;
+		opacity: 0.8;
+	}
+	.sky-petal {
+		border-radius: 80% 10% 80% 10%;
+		opacity: 0.8;
+	}
+	.sky-meteor {
+		height: 1.3px;
+		border-radius: 2px;
+		background: linear-gradient(to right, rgba(200, 230, 255, 0), rgba(226, 242, 255, 0.92));
+		transform-origin: 100% 50%;
+	}
+	@keyframes sky-blink {
+		0%,
+		16% {
+			opacity: 1;
+		}
+		17%,
+		100% {
+			opacity: 0.12;
+		}
+	}
+</style>
+
+<script>
+	const host = document.getElementById('sky-ev');
+	const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+	const R = Math.random;
+
+	// ---------- 排班 ----------
+	const PLANE_GAP = [180, 300];
+	const RARE_GAP = [600, 900];
+	const FIRST_PLANE = [20, 60]; // 第一趟飞机来得早一点：看一两分钟就走的人也见得到
+	const QUIET = 60; // 都是秒
+	const between = ([a, b]: number[]) => (a + (b - a) * R()) * 1000;
+	const due = { plane: Date.now() + between(FIRST_PLANE), rare: Date.now() + between(RARE_GAP) };
+	let clearAt = 0; // 天上那样什么时候走完
+	let timer = 0;
+
+	const night = () => document.documentElement.dataset.theme === 'dark';
+	const allowed = () => !reduce.matches && document.visibilityState === 'visible';
+
+	// ---------- 画 ----------
+	function piece(cls: string, html = '') {
+		const el = document.createElement('span');
+		el.className = 'sky-ev ' + cls;
+		el.innerHTML = html;
+		host!.appendChild(el);
+		return el;
+	}
+
+	// 沿一条略斜的直线横穿，头朝前（尾迹拖在后面），speed 是每秒多少像素；返回要多久（毫秒）。位置都按「头在哪」算
+	function cross(cls: string, html: string, speed: number) {
+		const el = piece(cls, html);
+		const W = innerWidth;
+		const H = innerHeight;
+		const w = el.offsetWidth;
+		const ltr = R() < 0.5;
+		const y0 = H * (0.1 + R() * 0.45);
+		const y1 = y0 + (R() * 0.12 - 0.09) * H;
+		const x0 = ltr ? -20 : W + 20;
+		const x1 = ltr ? W + w + 20 : -w - 20;
+		const turn = ` rotate(${((Math.atan2(y1 - y0, x1 - x0) * 180) / Math.PI).toFixed(2)}deg)`;
+		const at = (x: number, y: number) => ({ transform: `translate(${(x - w).toFixed(0)}px,${y.toFixed(0)}px)${turn}` });
+		const ms = Math.round((Math.hypot(x1 - x0, y1 - y0) / speed) * 1000);
+		el.animate([at(x0, y0), at(x1, y1)], { duration: ms, easing: 'linear' }).onfinish = () => el.remove();
+		return ms;
+	}
+
+	const PETALS = ['#f6bfd0', '#f2a7bd', '#f9d3de'];
+	function petals() {
+		const W = innerWidth;
+		const H = innerHeight;
+		let longest = 0;
+		for (let i = 0; i < 6; i++) {
+			const el = piece('sky-petal');
+			const s = 6 + R() * 4;
+			const x = W * (0.05 + R() * 0.7);
+			const dx = H * (0.18 + R() * 0.2);
+			const r = R() * 360;
+			el.style.cssText = `width:${s.toFixed(1)}px;height:${(s * 0.7).toFixed(1)}px;background:${PETALS[i % 3]}`;
+			const at = (k: number, sway: number, spin: number) => ({
+				transform: `translate(${(x + dx * k + sway).toFixed(0)}px,${(-12 + (H + 24) * k).toFixed(0)}px) rotate(${(r + spin).toFixed(0)}deg)`,
+			});
+			const ms = ((H + 24) / (50 + R() * 20)) * 1000;
+			const delay = i * 800;
+			el.animate([at(0, 0, 0), at(0.33, 18, 140), at(0.66, -10, 250), at(1, 0, 400)], {
+				duration: ms,
+				delay,
+				easing: 'linear',
+				fill: 'backwards',
+			}).onfinish = () => el.remove();
+			longest = Math.max(longest, ms + delay);
+		}
+		return Math.round(longest);
+	}
+
+	// 流星雨：十颗左右（窄屏少几颗），都朝左下，八九秒里陆续划过
+	function meteors() {
+		const W = innerWidth;
+		const H = innerHeight;
+		const a = (150 * Math.PI) / 180;
+		const n = W < 640 ? 7 : 10;
+		let longest = 0;
+		for (let i = 0; i < n; i++) {
+			const el = piece('sky-meteor');
+			const len = 46 + R() * 60;
+			const x = W * (0.25 + R() * 0.8);
+			const y = -10 + R() * H * 0.45;
+			const d = 200 + R() * 140;
+			el.style.width = len.toFixed(0) + 'px';
+			const ms = 900 + R() * 500;
+			const delay = (i * 8000) / n + R() * 500;
+			el.animate(
+				[
+					{ transform: `translate(${x.toFixed(0)}px,${y.toFixed(0)}px) rotate(150deg)`, opacity: 0 },
+					{ opacity: 1, offset: 0.2 },
+					{ opacity: 1, offset: 0.7 },
+					{ transform: `translate(${(x + Math.cos(a) * d).toFixed(0)}px,${(y + Math.sin(a) * d).toFixed(0)}px) rotate(150deg)`, opacity: 0 },
+				],
+				{ duration: ms, delay, easing: 'ease-in', fill: 'both' },
+			).onfinish = () => el.remove();
+			longest = Math.max(longest, ms + delay);
+		}
+		return Math.round(longest);
+	}
+
+	const SHOWS: Record<string, () => number> = {
+		plane: () => cross('sky-plane', '<span class="sky-trails"><b></b><b></b></span><span class="sky-dot"></span>', 45),
+		redeye: () => cross('sky-redeye', '<span class="sky-red"></span><span class="sky-white"></span>', 38),
+		petals,
+		meteors,
+	};
+	function show(kind: string) {
+		clearAt = Date.now() + SHOWS[kind]();
+	}
+
+	const arm = (ms: number) => {
+		clearTimeout(timer);
+		timer = window.setTimeout(tick, Math.max(1000, ms));
+	};
+	const next = () => Math.min(due.plane, due.rare) - Date.now();
+
+	function tick() {
+		if (!allowed()) return; // 回到前台时再排（下面的 visibilitychange）；减少动态的就一直不放
+		const now = Date.now();
+		const kind: 'plane' | 'rare' = due.rare <= now ? 'rare' : 'plane'; // 两样都到点了，先放少见的那样
+		if (now < due[kind]) return arm(next());
+		const free = clearAt ? clearAt + QUIET * 1000 : 0;
+		if (now < free) return arm(free - now); // 天上还有东西，或刚走完不到一分钟：先等
+		due[kind] = now + between(kind === 'plane' ? PLANE_GAP : RARE_GAP);
+		show(kind === 'plane' ? (night() ? 'redeye' : 'plane') : night() ? 'meteors' : 'petals');
+		arm(next());
+	}
+
+	if (host) {
+		document.addEventListener('visibilitychange', () => {
+			if (document.visibilityState !== 'visible') clearTimeout(timer); // 在后台：定时器也不挂
+			else arm(next());
+		});
+		// 换了日夜：天上那样直接拿掉（日间的飞机不该飞进夜里）
+		new MutationObserver(() => {
+			host.querySelectorAll('.sky-ev').forEach((el) => el.remove());
+			if (clearAt > Date.now()) clearAt = Date.now();
+		}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+		// 预览时手动放一样看样子：dispatchEvent(new CustomEvent('sky-show', { detail: 'plane' }))（plane / redeye / petals / meteors）
+		addEventListener('sky-show', (e) => {
+			const kind = (e as CustomEvent).detail;
+			if (SHOWS[kind]) show(kind);
+		});
+		arm(next());
+	}
+</script>

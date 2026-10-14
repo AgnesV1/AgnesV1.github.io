@@ -33,13 +33,26 @@ const { title, description, image = '/og.png' } = Astro.props;
 />
 <meta name="generator" content={Astro.generator} />
 
-<!-- 主题与语言初始化：必须在样式生效前运行，避免闪烁 -->
+<!-- 主题与语言初始化：必须在样式生效前运行，避免闪烁。
+     日夜跟着钟点走：当地时间 6 点到 18 点是日间，其余是夜间；点过页头那颗日月的（theme-hold = { v, until }）照点的来，管到下一个六点。
+     同一条规则在 ThemeToggle.astro 的脚本里还有一份（页面开着过六点时用），改要一起改。 -->
 <script is:inline>
-	const theme =
-		localStorage.getItem('theme') ??
-		(matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-	document.documentElement.dataset.theme = theme;
-	document.documentElement.dataset.lang = localStorage.getItem('lang') ?? 'zh';
+	(() => {
+		const now = new Date();
+		const h = now.getHours();
+		let theme = h >= 6 && h < 18 ? 'light' : 'dark';
+		let lang = 'zh';
+		try {
+			localStorage.removeItem('theme'); // 以前存的是永久的选择，留着会盖住钟点
+			const hold = JSON.parse(localStorage.getItem('theme-hold') || 'null');
+			if (hold && (hold.v === 'light' || hold.v === 'dark') && now.getTime() < Number(hold.until)) theme = hold.v;
+			lang = localStorage.getItem('lang') ?? 'zh';
+		} catch {
+			/* 读不了本地存储：照钟点、默认中文 */
+		}
+		document.documentElement.dataset.theme = theme;
+		document.documentElement.dataset.lang = lang;
+	})();
 </script>
 
 <Font cssVariable="--font-display" preload />

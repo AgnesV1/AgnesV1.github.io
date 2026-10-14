@@ -1,34 +1,25 @@
-<button id="theme-toggle" aria-label="切换亮暗模式" title="切换亮暗模式">
-	<svg
-		class="sun"
-		width="18"
-		height="18"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="2"
-		stroke-linecap="round"
-		aria-hidden="true"
-	>
-		<circle cx="12" cy="12" r="4"></circle>
-		<path
-			d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.3 11.3 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
-		></path>
-	</svg>
-	<svg
-		class="moon"
-		width="18"
-		height="18"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="2"
-		stroke-linecap="round"
-		stroke-linejoin="round"
-		aria-hidden="true"
-	>
-		<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path>
-	</svg>
+---
+// 页头的日月：日间是一颗小太阳，夜间是一颗小月亮，上面一层镜面球的细格。点一下换日夜。
+// 细格：七条纬线 + 八条经线（经线是同一条半圆弧横向压扁成不同的宽度）。整颗慢慢转；经线不动——空闲时不留要重画的动画。
+const RAD = Math.PI / 180;
+const lats = [-67.5, -45, -22.5, 0, 22.5, 45, 67.5].map((f) => {
+	const y = 50 + 50 * Math.sin(f * RAD);
+	const w = 50 * Math.cos(f * RAD);
+	return `M${(50 - w).toFixed(1)} ${y.toFixed(1)}H${(50 + w).toFixed(1)}`;
+});
+const lons = Array.from({ length: 8 }, (_, k) => Math.sin((-90 + k * 22.5) * RAD).toFixed(3));
+---
+
+<button id="theme-toggle" aria-label="切换日夜" title="切换日夜">
+	<span class="ball">
+		<svg viewBox="0 0 100 100" aria-hidden="true">
+			<g class="ball-grid">
+				{lats.map((d) => <path d={d} />)}
+				{lons.map((a) => <path class="lon" d="M50 0A50 50 0 0 1 50 100" style={`transform:scaleX(${a})`} />)}
+			</g>
+			<circle class="ball-shine" cx="33" cy="30" r="9"></circle>
+		</svg>
+	</span>
 </button>
 
 <style>
@@ -39,41 +30,133 @@
 		border: none;
 		background: none;
 		cursor: pointer;
-		padding: 0.45rem;
+		padding: 0.4rem;
 		border-radius: 50%;
-		color: var(--tx-2);
-		transition:
-			color 0.2s ease,
-			background 0.2s ease;
+		transition: background 0.2s ease;
 	}
 	button:hover {
-		color: var(--sun);
 		background: color-mix(in srgb, var(--sun) 14%, transparent);
 	}
-	.moon {
-		display: none;
-	}
-	:global([data-theme='dark']) .sun {
-		display: none;
-	}
-	:global([data-theme='dark']) .moon {
+	/* 太阳：黄 → 橙 → 粉 → 紫的渐变圆，下半截镂三道横纹；月亮：冰蓝的满月，几块淡淡的明暗，一圈蓝的光晕。
+	   底色和横纹的 mask 在里面的 svg 上，光晕在外面这层（放一起光晕会被 mask 吃掉） */
+	.ball {
 		display: block;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		animation: ball-spin 12s linear infinite;
+	}
+	.ball svg {
+		display: block;
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+	}
+	:global([data-theme='light']) .ball {
+		filter: drop-shadow(0 0 3px rgba(255, 120, 90, 0.5));
+	}
+	:global([data-theme='light']) .ball svg {
+		background: linear-gradient(180deg, #ffd84a, #ff9f3d 34%, #ff4f8b 68%, #c24bd6);
+		-webkit-mask: linear-gradient(
+			#000 0 56%,
+			transparent 56% 60%,
+			#000 60% 70%,
+			transparent 70% 75.5%,
+			#000 75.5% 84%,
+			transparent 84% 91%,
+			#000 91%
+		);
+		mask: linear-gradient(
+			#000 0 56%,
+			transparent 56% 60%,
+			#000 60% 70%,
+			transparent 70% 75.5%,
+			#000 75.5% 84%,
+			transparent 84% 91%,
+			#000 91%
+		);
+	}
+	:global([data-theme='dark']) .ball {
+		filter: drop-shadow(0 0 3px rgba(120, 225, 255, 0.8)) drop-shadow(0 0 8px rgba(70, 130, 255, 0.5));
+	}
+	:global([data-theme='dark']) .ball svg {
+		background:
+			radial-gradient(circle at 66% 40%, rgba(30, 110, 220, 0.28) 0 12%, transparent 24%),
+			radial-gradient(circle at 40% 70%, rgba(30, 110, 220, 0.22) 0 14%, transparent 28%),
+			radial-gradient(circle at 38% 34%, #f4ffff, #bff4ff 38%, #62ceff 72%, #3393ea);
+	}
+	.ball-grid {
+		fill: none;
+		stroke: #fff;
+		stroke-opacity: 0.55;
+		stroke-width: 0.5px;
+	}
+	.ball-grid path {
+		vector-effect: non-scaling-stroke;
+	}
+	.ball-grid .lon {
+		transform-box: view-box;
+		transform-origin: 50px 50px;
+	}
+	.ball-shine {
+		fill: #fff;
+		fill-opacity: 0.58;
+	}
+	@keyframes ball-spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.ball {
+			animation: none;
+		}
 	}
 </style>
 
 <script>
-	// 切换时的过场：整页慢慢淡过去（同文档 View Transition，只在点这个按钮时用），底边泛一阵霞光（.dusk，样式在 global.css）。
-	// 系统要求减少动态就直接换；浏览器不支持过渡时也直接换，霞光照常泛一下
+	// 日夜跟着钟点走：当地时间 6 点到 18 点是日间，其余是夜间。点这个按钮 = 先照点的来，管到下一个早 6 点 / 晚 6 点，之后又跟钟点。
+	// 手动的那一下存在 localStorage 的 theme-hold（{ v, until }）。同一条规则在 BaseHead.astro 开头那段脚本里还有一份
+	// （样式生效前就要定好，等不到这里），改要一起改。
+	//
+	// 换的那一下的过场：整页慢慢淡过去（同文档 View Transition），底边泛一阵霞光（.dusk），这颗日月一落一升；样式都在 global.css。
+	// 系统要求减少动态、页面在后台就直接换；浏览器不支持过渡时也直接换，霞光照常泛一下
 	const root = document.documentElement;
 	const btn = document.getElementById('theme-toggle');
 	const calm = matchMedia('(prefers-reduced-motion: reduce)');
-	btn?.addEventListener('click', () => {
-		const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+	const KEY = 'theme-hold';
+
+	// 下一次换班（早 6 点或晚 6 点）是什么时候
+	const nextTurn = () => {
+		const d = new Date();
+		const h = d.getHours();
+		d.setMinutes(0, 0, 0);
+		if (h < 6) d.setHours(6);
+		else if (h < 18) d.setHours(18);
+		else {
+			d.setDate(d.getDate() + 1);
+			d.setHours(6);
+		}
+		return d.getTime();
+	};
+	// 现在该是哪个样子
+	const want = () => {
+		try {
+			const hold = JSON.parse(localStorage.getItem(KEY) || 'null');
+			if (hold && (hold.v === 'light' || hold.v === 'dark') && Date.now() < Number(hold.until)) return hold.v;
+		} catch {
+			/* 读不出来就照钟点 */
+		}
+		const h = new Date().getHours();
+		return h >= 6 && h < 18 ? 'light' : 'dark';
+	};
+
+	function turnTo(next: string) {
+		if (root.dataset.theme === next) return;
 		const apply = () => {
 			root.dataset.theme = next;
-			localStorage.setItem('theme', next);
 		};
-		if (calm.matches) return apply();
+		if (calm.matches || document.visibilityState !== 'visible') return apply();
 		document.querySelector('.dusk')?.remove();
 		const glow = document.createElement('div');
 		glow.className = 'dusk';
@@ -82,12 +165,41 @@
 		const swap = () => {
 			apply();
 			document.body.append(glow);
-			setTimeout(() => glow.remove(), 1800);
+			setTimeout(() => glow.remove(), 3200); // 霞光那段动画是 3 秒
 		};
 		if (!document.startViewTransition) return swap();
 		root.dataset.vt = 'theme';
 		const vt = document.startViewTransition(swap);
 		vt.ready.catch(() => {});
 		vt.finished.finally(() => delete root.dataset.vt).catch(() => {});
+	}
+
+	// 页面开着过了六点（或手动那一段到头了）：到点自己换；回到前台时也看一眼。只挂这一个定时器
+	let timer = 0;
+	const arm = () => {
+		clearTimeout(timer);
+		timer = window.setTimeout(
+			() => {
+				turnTo(want());
+				arm();
+			},
+			Math.max(1000, nextTurn() - Date.now() + 500),
+		);
+	};
+
+	btn?.addEventListener('click', () => {
+		const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+		try {
+			localStorage.setItem(KEY, JSON.stringify({ v: next, until: nextTurn() }));
+		} catch {
+			/* 存不了：这一页照样换，只是不记 */
+		}
+		turnTo(next);
 	});
+	document.addEventListener('visibilitychange', () => {
+		if (document.visibilityState !== 'visible') return;
+		turnTo(want());
+		arm();
+	});
+	arm();
 </script>
