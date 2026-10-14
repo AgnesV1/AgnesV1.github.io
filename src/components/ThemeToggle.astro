@@ -1,6 +1,8 @@
 ---
 // 页头的日月：日间是一颗小太阳，夜间是一颗小月亮，上面一层镜面球的细格。点一下换日夜。
 // 细格：七条纬线 + 八条经线（经线是同一条半圆弧横向压扁成不同的宽度）。整颗慢慢转；经线不动——空闲时不留要重画的动画。
+// 转的是里面的 svg，外面的 .ball 不转：换日夜的过场是给 .ball 起名字的（global.css 的 view-transition-name: orb），
+// 它要是带着转，过场里「往下落 / 往上升」就会朝着它当时转到的方向走。
 const RAD = Math.PI / 180;
 const lats = [-67.5, -45, -22.5, 0, 22.5, 45, 67.5].map((f) => {
 	const y = 50 + 50 * Math.sin(f * RAD);
@@ -44,13 +46,13 @@ const lons = Array.from({ length: 8 }, (_, k) => Math.sin((-90 + k * 22.5) * RAD
 		width: 20px;
 		height: 20px;
 		border-radius: 50%;
-		animation: ball-spin 12s linear infinite;
 	}
 	.ball svg {
 		display: block;
 		width: 100%;
 		height: 100%;
 		border-radius: 50%;
+		animation: ball-spin 12s linear infinite;
 	}
 	:global([data-theme='light']) .ball {
 		filter: drop-shadow(0 0 3px rgba(255, 120, 90, 0.5));
@@ -108,7 +110,7 @@ const lons = Array.from({ length: 8 }, (_, k) => Math.sin((-90 + k * 22.5) * RAD
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.ball {
+		.ball svg {
 			animation: none;
 		}
 	}
