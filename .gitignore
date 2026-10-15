@@ -31,6 +31,9 @@ pnpm-debug.log*
 
 # obsidian vault settings
 .obsidian/
+# obsidian plugin files left in the content folder (TaskNotes, Bases)
+src/content/TaskNotes/
+src/content/*.base
 
 # personal local notes (never published)
 发布指南.md
