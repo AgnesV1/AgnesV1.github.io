@@ -58,6 +58,9 @@ const hasSides = timeline.length > 0 || headings.length > 0;
 
 // string 项转成统一的对象形状
 const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
+
+// 这篇的颜色：第一个 tag 的颜色，荧光笔 / 链接悬停 / 选中文字用（global.css 的 .t0–.t4）
+const tone = tags.length > 0 ? `t${tagColorIndex(tags[0])}` : undefined;
 ---
 
 <html lang={htmlLang} data-page-lang={lang} data-translation-href={translationHref}>
@@ -67,10 +70,12 @@ const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
 
 	<body>
 		<Header />
+		<!-- 阅读进度：顶上一根五色细线跟着滚动长（纯 CSS 滚动时间轴，不支持的浏览器不显示） -->
+		<div class="read-progress" aria-hidden="true"></div>
 		<div class:list={['shell', { wide: hasSides }]}>
 			{timeline.length > 0 && <NoteTimeline items={timeline} currentId={currentId} />}
 			<main>
-				<article>
+				<article class={tone}>
 				{
 					heroImage && (
 						<Image class="hero" width={1020} height={510} src={heroImage} alt="" />
@@ -151,6 +156,42 @@ const refs = references.map((r) => (typeof r === 'string' ? { title: r } : r));
 </html>
 
 <style>
+	/* 阅读进度线：2px，珊瑚 → 杏黄 → 薄荷 → 天蓝 → 薰衣草，整条渐变固定铺满、按读到哪儿从左往右露出来。
+	   用 CSS 滚动时间轴（scroll(root)）驱动，没有脚本；页面短到不用滚时时间轴不生效，线就不出现。
+	   浏览器不支持、或系统要求减少动态时不显示。z-index 压在迷你页头（45）上面。 */
+	.read-progress {
+		display: none;
+	}
+	@supports (animation-timeline: scroll()) {
+		@media (prefers-reduced-motion: no-preference) {
+			.read-progress {
+				display: block;
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				z-index: 46;
+				height: 2px;
+				pointer-events: none;
+				background: linear-gradient(90deg, var(--coral), var(--sun), var(--mint), var(--sky), var(--lav));
+				clip-path: inset(0 100% 0 0);
+				animation-name: read-grow;
+				animation-duration: auto;
+				animation-timing-function: linear;
+				animation-fill-mode: both;
+				animation-timeline: scroll(root);
+			}
+		}
+	}
+	@keyframes read-grow {
+		from {
+			clip-path: inset(0 100% 0 0);
+		}
+		to {
+			clip-path: inset(0 0 0 0);
+		}
+	}
+
 	/* 三栏外壳：中间正文保持原宽度，宽屏时左侧放时间轴、右侧放文内目录，
 	   窄屏自动回到单栏（两侧栏组件内部自带 display:none 断点） */
 	.shell {

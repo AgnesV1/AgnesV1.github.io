@@ -96,8 +96,10 @@ a {
 	color: var(--sky);
 }
 
+/* 选中文字：五色之一的淡底 + 正文色。默认薰衣草；文章和短札里换成这篇的颜色（见下面「这篇的颜色」） */
 ::selection {
-	background: color-mix(in srgb, var(--lav) 28%, transparent);
+	background: color-mix(in srgb, var(--lav) 26%, transparent);
+	color: var(--tx);
 }
 
 :focus-visible {
@@ -229,6 +231,21 @@ body::after {
 	}
 }
 
+/* --- 日间纸纹：一层极淡、静止的纸面颗粒（feTurbulence 生成 200px 小块平铺，multiply 压在奶油底上）。
+   挂在 html::before 上，排在底图两层和 Sky.astro 那层前面，所以铺在底色上面、天色和云下面，不盖天上的东西。
+   夜里不加：星星只有一两个像素，会被颗粒糊掉。想更淡 / 更明显只调 opacity；不要了就删掉这一段。 */
+html[data-theme='light']::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='p' x='0' y='0' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='2.2 0 0 0 -.12 2.2 0 0 0 -.15 2.2 0 0 0 -.2 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23p)'/%3E%3C/svg%3E");
+	background-size: 200px 200px;
+	mix-blend-mode: multiply;
+	opacity: 0.07;
+}
+
 /* 系统设置了「减少动态」就完全静止 */
 @media (prefers-reduced-motion: reduce) {
 	body::before,
@@ -329,6 +346,85 @@ html[data-vt='theme']::view-transition-new(orb) {
 	letter-spacing: 0.02em;
 	line-height: 1.95;
 	color: var(--tx-2);
+}
+
+/* ===== 这篇的颜色 =====
+   文章页的 <article>、短札的 <li> 带 .t0–.t4（按这篇第一个 tag 取色，同 src/lib/tag-color.ts 的色序），
+   给荧光笔、正文链接悬停的下划线、选中文字用；没有 tag 的不带，各自回到默认色。
+   选中文字那几条单独写死颜色，不靠 --tag（有的浏览器在 ::selection 里读不到元素上的变量）。 */
+.t0 {
+	--tag: var(--coral);
+}
+.t1 {
+	--tag: var(--mint);
+}
+.t2 {
+	--tag: var(--lav);
+}
+.t3 {
+	--tag: var(--sun);
+}
+.t4 {
+	--tag: var(--sky);
+}
+.t0 ::selection {
+	background: color-mix(in srgb, var(--coral) 26%, transparent);
+}
+.t1 ::selection {
+	background: color-mix(in srgb, var(--mint) 26%, transparent);
+}
+.t2 ::selection {
+	background: color-mix(in srgb, var(--lav) 26%, transparent);
+}
+.t3 ::selection {
+	background: color-mix(in srgb, var(--sun) 26%, transparent);
+}
+.t4 ::selection {
+	background: color-mix(in srgb, var(--sky) 26%, transparent);
+}
+
+/* ===== 荧光笔：Markdown 里的 ==文字==（scripts/rehype-mark.mjs 转成 <mark>）=====
+   手写感的一道：四个角圆得不一样，100° 方向两头淡、中间浓；只涂字的下面 62%，跨行时每行各自一笔。
+   颜色是这篇的颜色（--tag），没有 tag 时用杏黄；夜里透明度低一档。
+   滚到眼前时从左往右划出来（跟着滚动走，划完就停在那儿）；浏览器不支持、或系统要求减少动态，就直接显示画好的样子。 */
+mark {
+	--hl: var(--tag, var(--sun));
+	--hl-a: 20%;
+	--hl-b: 40%;
+	color: inherit;
+	padding: 0 0.14em;
+	margin: 0 -0.04em;
+	border-radius: 0.7em 0.25em 0.6em 0.3em;
+	background: linear-gradient(
+			100deg,
+			color-mix(in srgb, var(--hl) var(--hl-a), transparent),
+			color-mix(in srgb, var(--hl) var(--hl-b), transparent) 50%,
+			color-mix(in srgb, var(--hl) calc(var(--hl-a) - 3%), transparent)
+		)
+		0 100% / 100% 62% no-repeat;
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+[data-theme='dark'] mark {
+	--hl-a: 14%;
+	--hl-b: 30%;
+}
+@supports (animation-timeline: view()) {
+	@media (prefers-reduced-motion: no-preference) {
+		mark {
+			animation-name: hl-draw;
+			animation-duration: auto;
+			animation-timing-function: cubic-bezier(0.25, 0.7, 0.3, 1);
+			animation-fill-mode: both;
+			animation-timeline: view();
+			animation-range: entry 10% cover 30%;
+		}
+	}
+}
+@keyframes hl-draw {
+	from {
+		background-size: 0% 62%;
+	}
 }
 
 /* ===== 彩色小徽章（标签、语言标识） ===== */
@@ -437,7 +533,8 @@ html[data-vt='theme']::view-transition-new(orb) {
 	transition: text-decoration-color 0.2s ease;
 }
 .prose a:hover {
-	text-decoration-color: var(--sky);
+	/* 悬停时下划线换成这篇的颜色 */
+	text-decoration-color: var(--tag, var(--sky));
 }
 
 .prose ul,

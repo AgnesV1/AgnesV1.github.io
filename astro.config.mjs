@@ -4,6 +4,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig, fontProviders } from 'astro/config';
 import rehypeHiddenText from './scripts/rehype-hidden-text.mjs';
+import rehypeMark from './scripts/rehype-mark.mjs';
 
 // https://astro.build/config
 export default defineConfig({
@@ -17,8 +18,9 @@ export default defineConfig({
 		'/2024/03/31/Rian-Doris': '/blog/rian-doris',
 	},
 	markdown: {
-		// 防剧透：正文里的 ||文字|| 构建时转成星尘遮掩的 <hidden-text>
-		rehypePlugins: [rehypeHiddenText],
+		// 防剧透：正文里的 ||文字|| 构建时转成星尘遮掩的 <hidden-text>；
+		// 荧光笔：==文字== 转成 <mark>。顺序别换——星尘先跑，荧光笔跳过它生成的元素
+		rehypePlugins: [rehypeHiddenText, rehypeMark],
 		shikiConfig: {
 			themes: { light: 'github-light', dark: 'github-dark' },
 			defaultColor: false,

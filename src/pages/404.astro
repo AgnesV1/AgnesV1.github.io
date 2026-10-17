@@ -1,0 +1,202 @@
+---
+// 404「云雀飞丢了」：一张小插图 + 一句话 + 回首页。中英跟着页头的语言切换（.only-zh / .only-en）。
+// 插图：云朵取自 Kitbitz（kitbitz.art，Barbieland Kit 的 Cloud，CC0 1.0，不用署名），
+// 去掉了原图底下的投影、颜色改成跟日夜走的变量；绕圈的虚线航迹和一笔飞鸟是自己画的。
+// 进场时航迹从云后面画出来、小鸟最后飞到位，只放一次；系统要求减少动态时直接是画好的样子。
+// GitHub Pages 找不到页面时会自动用构建出来的 404.html。
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+
+const TRAIL = 'M178 122C192 96 208 76 232 68C258 60 270 40 256 30C242 21 228 38 240 50C254 63 286 52 318 32';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<BaseHead title={`云雀飞丢了 · 404 · ${SITE_TITLE}`} description="这一页不在这片天上。" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="lost">
+				<svg class="art" viewBox="0 0 360 200" role="img" aria-label="一朵云，一道绕了个圈的虚线飞远，尽头是一只小鸟 / A cloud, and a dotted trail that loops once and flies off to a small bird">
+					<defs>
+						<linearGradient id="nf-cloud" x1="0" y1="0" x2="0" y2="1">
+							<stop class="nf-top" offset="0"></stop>
+							<stop class="nf-bot" offset="1"></stop>
+						</linearGradient>
+						<!-- 云底那一圈内阴影（照 Kitbitz 原图的做法：形状往上挪、糊开，剩下贴着底边的一圈） -->
+						<filter id="nf-shade" x="-5%" y="-20%" width="110%" height="140%" color-interpolation-filters="sRGB">
+							<feOffset in="SourceAlpha" dy="-62" result="up"></feOffset>
+							<feGaussianBlur in="up" stdDeviation="20.5" result="soft"></feGaussianBlur>
+							<feComposite in="SourceAlpha" in2="soft" operator="arithmetic" k2="1" k3="-1" result="rim"></feComposite>
+							<feFlood class="nf-shade"></feFlood>
+							<feComposite in2="rim" operator="in" result="tint"></feComposite>
+							<feMerge>
+								<feMergeNode in="SourceGraphic"></feMergeNode>
+								<feMergeNode in="tint"></feMergeNode>
+							</feMerge>
+						</filter>
+						<mask id="nf-draw" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="200">
+							<path class="nf-pen" d={TRAIL} pathLength="1"></path>
+						</mask>
+					</defs>
+
+					<!-- 航迹：从云后面出发，绕一个圈，飞远 -->
+					<path class="nf-trail" d={TRAIL} mask="url(#nf-draw)"></path>
+
+					<!-- 云（Kitbitz，CC0） -->
+					<g transform="translate(62 104) scale(0.19)" filter="url(#nf-shade)" opacity="0.95">
+						<path
+							fill="url(#nf-cloud)"
+							d="M850.19 82.1936H705.036C681.714 33.5723 632.027 0 574.499 0H507.716C450.188 0 400.502 33.5723 377.18 82.1936H298.808C219.181 82.1936 154.576 146.513 154.115 226.032H82.1936C36.7993 226.032 0 262.832 0 308.226C0 353.62 36.7993 390.419 82.1936 390.419H374.018C388.229 414.987 414.792 431.516 445.215 431.516H821.935C859.615 431.516 891.373 406.162 901.079 371.583H1077.08C1122.47 371.583 1159.27 334.784 1159.27 289.39C1159.27 243.996 1122.47 207.196 1077.08 207.196H993.556C983.949 136.599 923.423 82.1936 850.19 82.1936Z"
+						></path>
+					</g>
+
+					<!-- 一笔飞鸟 -->
+					<g class="nf-bird-at" transform="translate(328 25) rotate(-14) scale(1.35)">
+						<path class="nf-bird" d="M-10 2.5Q-5 -5.5 0 0.8Q5 -5.5 10 2.5"></path>
+					</g>
+
+					<!-- 夜里才亮的几颗小星 -->
+					<g class="nf-stars">
+						<path d="M44 46l1.2 3.3 3.3 1.2-3.3 1.2-1.2 3.3-1.2-3.3-3.3-1.2 3.3-1.2z"></path>
+						<path d="M300 150l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z"></path>
+						<circle cx="112" cy="40" r="1.1"></circle>
+						<circle cx="214" cy="170" r="0.9"></circle>
+					</g>
+				</svg>
+
+				<p class="code">404</p>
+				<h1>
+					<span class="only-zh">云雀飞丢了——这一页不在这片天上。</span>
+					<span class="only-en">The skylark flew off — this page isn't in this sky.</span>
+				</h1>
+				<p class="home">
+					<a href="/">← <span class="only-zh">回首页</span><span class="only-en">Back home</span></a>
+				</p>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.lost {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		padding: 2.5rem 0 3rem;
+	}
+	.art {
+		width: min(100%, 30rem);
+		height: auto;
+		overflow: visible;
+	}
+
+	/* 云：日间是 Kitbitz 原图的奶油黄 → 粉，底边一圈粉紫；夜间换成暗下去的薰衣草，底边一圈冷蓝 */
+	.nf-top {
+		stop-color: #faf2c9;
+	}
+	.nf-bot {
+		stop-color: #f0c1c8;
+	}
+	.nf-shade {
+		flood-color: #da8cc1;
+	}
+	[data-theme='dark'] .nf-top {
+		stop-color: color-mix(in srgb, var(--lav) 36%, var(--bg));
+	}
+	[data-theme='dark'] .nf-bot {
+		stop-color: color-mix(in srgb, var(--lav) 16%, var(--bg));
+	}
+	[data-theme='dark'] .nf-shade {
+		flood-color: color-mix(in srgb, var(--sky) 26%, var(--bg));
+	}
+
+	.nf-trail {
+		fill: none;
+		stroke: color-mix(in srgb, var(--tx-2) 70%, transparent);
+		stroke-width: 1.6;
+		stroke-linecap: round;
+		stroke-dasharray: 0.1 6;
+	}
+	.nf-pen {
+		fill: none;
+		stroke: #fff;
+		stroke-width: 8;
+		stroke-dasharray: 1 1;
+	}
+	.nf-bird {
+		fill: none;
+		stroke: color-mix(in srgb, var(--tx) 78%, transparent);
+		stroke-width: 1.7;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.nf-stars {
+		fill: var(--sun);
+		opacity: 0;
+	}
+	[data-theme='dark'] .nf-stars {
+		opacity: 0.8;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.nf-pen {
+			animation: nf-draw 1.6s cubic-bezier(0.4, 0.2, 0.2, 1) 0.2s both;
+		}
+		.nf-bird {
+			animation: nf-arrive 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) 1.3s both;
+		}
+	}
+	@keyframes nf-draw {
+		from {
+			stroke-dashoffset: 1;
+		}
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+	@keyframes nf-arrive {
+		from {
+			opacity: 0;
+			transform: translate(-14px, 7px) scale(0.8);
+		}
+	}
+
+	.code {
+		margin: 1.6rem 0 0.2rem;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		letter-spacing: 0.3em;
+		margin-right: -0.3em;
+		color: var(--tx-2);
+	}
+	h1 {
+		margin: 0;
+		font-size: clamp(1.15rem, 3.6vw, 1.4rem);
+		font-weight: 500;
+		line-height: 1.6;
+	}
+	.home {
+		margin: 1.6rem 0 0;
+	}
+	.home a {
+		font-family: var(--font-mono);
+		font-size: 0.9rem;
+		color: var(--tx-2);
+		text-decoration: none;
+		border-bottom: 2px solid var(--line);
+		transition:
+			color 0.2s ease,
+			border-color 0.2s ease;
+	}
+	.home a:hover {
+		color: var(--sky);
+		border-bottom-color: var(--sky);
+	}
+</style>

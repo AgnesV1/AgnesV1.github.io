@@ -6,6 +6,10 @@ import ThemeToggle from './ThemeToggle.astro';
 
 // 站名是「英文名 ／ 中文名」的组合字标，中间的全角斜杠上色作点缀
 const [titleEn, titleZh] = SITE_TITLE.split('／').map((s) => s.trim());
+
+// 英文名拆成一个个字母，鼠标停上去时挨个扑一下翅膀（每个字母扑起来时短暂换成五色之一）
+const FLAP = ['coral', 'mint', 'lav', 'sun', 'sky'];
+const letters = [...titleEn];
 ---
 
 <header>
@@ -15,11 +19,8 @@ const [titleEn, titleZh] = SITE_TITLE.split('／').map((s) => s.trim());
 	</a>
 	<nav>
 		<a class="logo" href="/">
-			{titleZh ? (
-				<>{titleEn} <span class="slash">／</span> {titleZh}</>
-			) : (
-				<>{SITE_TITLE}<span class="slash">.</span></>
-			)}
+			<span class="flap" aria-hidden="true">{letters.map((ch, i) => <span class="ch" style={`--i:${i};--fc:var(--${FLAP[i % 5]})`}>{ch}</span>)}</span><span class="sr-only">{titleEn}</span>
+			{titleZh ? <> <span class="slash">／</span> {titleZh}</> : <span class="slash">.</span>}
 		</a>
 		<!-- 桌面端平铺在页头里；小屏折叠进汉堡菜单面板 -->
 		<div class="menu" id="site-menu">
@@ -163,6 +164,35 @@ const [titleEn, titleZh] = SITE_TITLE.split('／').map((s) => s.trim());
 	.logo .slash {
 		color: var(--coral);
 	}
+	/* 站名扑翅：鼠标停上去时字母挨个起落——上移 7px、转 -4°、短暂变成五色之一，
+	   错开 38ms、每个 0.7s。只在悬停的那一下动（脚本加 .flapping、最后一个字母落地后拿掉，
+	   所以中途移开也会把这一轮放完，不会半空弹回去）；系统要求减少动态时不动。 */
+	.logo .ch {
+		display: inline-block;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.logo.flapping .ch {
+			animation: flap 0.7s cubic-bezier(0.3, 0.7, 0.4, 1) both;
+			animation-delay: calc(var(--i) * 38ms);
+		}
+	}
+	@keyframes flap {
+		0%,
+		100% {
+			transform: none;
+			color: var(--tx);
+		}
+		32% {
+			transform: translateY(-7px) rotate(-4deg);
+			color: var(--fc);
+		}
+		58% {
+			color: var(--fc);
+		}
+		78% {
+			transform: translateY(0.5px) rotate(0.6deg);
+		}
+	}
 	/* 桌面端 .menu 不产生盒子，links / social 直接排进页头一行 */
 	.menu {
 		display: contents;
@@ -297,6 +327,16 @@ const [titleEn, titleZh] = SITE_TITLE.split('／').map((s) => s.trim());
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') setOpen(false);
 	});
+
+	// 站名扑翅：鼠标移上来（或键盘聚焦）时放一轮，最后一个字母落地后收工；放的中途再移上来不重放
+	const flapLogo = document.querySelector<HTMLElement>('header .logo');
+	const lastLetter = flapLogo?.querySelector('.ch:last-child');
+	if (flapLogo && lastLetter) {
+		const flap = () => flapLogo.classList.add('flapping');
+		flapLogo.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && flap());
+		flapLogo.addEventListener('focus', () => flapLogo.matches(':focus-visible') && flap());
+		lastLetter.addEventListener('animationend', () => flapLogo.classList.remove('flapping'));
+	}
 
 	// 页头字标滚出视口 → 迷你页头滑入顶端；滚回来 → 迷你页头退场
 	const miniBar = document.getElementById('mini-bar');

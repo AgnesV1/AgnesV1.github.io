@@ -125,6 +125,8 @@ let flatIndex = 0;
 												rel="noopener"
 												data-index={i}
 												data-caption={p.caption}
+												data-w={p.img.width}
+												data-h={p.img.height}
 											>
 												<Image
 													src={p.img}
@@ -166,6 +168,8 @@ let flatIndex = 0;
 												rel="noopener"
 												data-index={i}
 												data-caption={p.caption}
+												data-w={p.img.width}
+												data-h={p.img.height}
 											>
 												<Image
 													src={p.img}
@@ -205,31 +209,106 @@ let flatIndex = 0;
 		<script>
 			// 灯箱:点缩略图放大;左右键/按钮/滑动切换;Esc、× 或点空白处关闭。
 			// 没有 JS 时 <a> 直接新窗口打开大图,功能不丢。
+			// 打开 / 关上时,点的那颗圆直接长成大图、关掉时缩回原位:只在这一下用同文档的 View Transition
+			// (过渡里的名字叫 photo,样子在页面底部 is:global 那段),平时零开销。
+			// 不支持 View Transition、系统要求减少动态、页面在后台时,直接开关。
 			const photos = [...document.querySelectorAll<HTMLAnchorElement>('a.photo')];
 			const box = document.getElementById('lightbox') as HTMLDialogElement;
 			const img = document.getElementById('lb-img') as HTMLImageElement;
 			const cap = document.getElementById('lb-cap')!;
 			const count = document.getElementById('lb-count')!;
+			const root = document.documentElement;
 			let cur = 0;
+			let closing = false;
+
+			// 大图提前下:鼠标移上去、按下去、键盘聚焦时就开始取,点开时多半已经到了
+			const warm = (p?: HTMLAnchorElement) => {
+				if (!p || p.dataset.warm) return;
+				p.dataset.warm = '1';
+				new Image().src = p.href;
+			};
 
 			function show(i: number) {
 				cur = (i + photos.length) % photos.length;
 				const p = photos[cur];
+				// 先按原图比例把框定好(大图还没下完也一样),过渡才能对准最终的位置
+				img.style.setProperty('--ar', String(Number(p.dataset.w) / Number(p.dataset.h) || 1.5));
 				img.src = p.href;
 				img.alt = p.dataset.caption || 'photo';
 				cap.textContent = p.dataset.caption || '';
 				count.textContent = `${cur + 1} / ${photos.length}`;
+				warm(photos[(cur + 1) % photos.length]);
+				warm(photos[(cur - 1 + photos.length) % photos.length]);
+			}
+
+			const canMorph = () =>
+				'startViewTransition' in document &&
+				document.visibilityState === 'visible' &&
+				!matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+			// 等大图解码好再拍「过渡后」的样子,最多等 0.45 秒;没等到就先长出空框,图到了再显示
+			const ready = () =>
+				Promise.race([img.decode().catch(() => {}), new Promise((r) => setTimeout(r, 450))]);
+
+			function openBox(i: number) {
+				const p = photos[i];
+				box.classList.toggle('morph', canMorph());
+				if (!canMorph()) {
+					show(i);
+					box.showModal();
+					return;
+				}
+				root.dataset.vt = 'photo-open';
+				p.style.viewTransitionName = 'photo';
+				const t = document.startViewTransition(async () => {
+					p.style.viewTransitionName = '';
+					show(i);
+					img.style.viewTransitionName = 'photo';
+					box.showModal();
+					await ready();
+				});
+				t.finished.finally(() => {
+					img.style.viewTransitionName = '';
+					if (root.dataset.vt === 'photo-open') delete root.dataset.vt;
+				});
+			}
+
+			function closeBox() {
+				if (!box.open || closing) return;
+				if (!canMorph()) {
+					box.close();
+					return;
+				}
+				const p = photos[cur];
+				closing = true;
+				root.dataset.vt = 'photo-close';
+				img.style.viewTransitionName = 'photo';
+				const t = document.startViewTransition(() => {
+					img.style.viewTransitionName = '';
+					box.close();
+					// 翻到了屏幕外的那张:先把它滚回视野里,再缩回去
+					const r = p.getBoundingClientRect();
+					if (r.bottom < 0 || r.top > innerHeight) p.scrollIntoView({ block: 'center', behavior: 'instant' });
+					p.style.viewTransitionName = 'photo';
+				});
+				t.finished.finally(() => {
+					p.style.viewTransitionName = '';
+					closing = false;
+					if (root.dataset.vt === 'photo-close') delete root.dataset.vt;
+				});
 			}
 
 			photos.forEach((p, i) => {
+				p.addEventListener('pointerenter', () => warm(p));
+				p.addEventListener('pointerdown', () => warm(p));
+				p.addEventListener('focus', () => warm(p));
 				p.addEventListener('click', (e) => {
 					e.preventDefault();
-					show(i);
-					box.showModal();
+					openBox(i);
 				});
 			});
 
-			box.querySelector('.lb-close')!.addEventListener('click', () => box.close());
+			box.querySelector('.lb-close')!.addEventListener('click', closeBox);
 			box.querySelector('.lb-prev')!.addEventListener('click', () => show(cur - 1));
 			box.querySelector('.lb-next')!.addEventListener('click', () => show(cur + 1));
 
@@ -238,13 +317,21 @@ let flatIndex = 0;
 				if (!box.open) return;
 				if (e.key === 'ArrowLeft') show(cur - 1);
 				if (e.key === 'ArrowRight') show(cur + 1);
-				if (e.key === 'Escape') box.close();
+				if (e.key === 'Escape') {
+					e.preventDefault();
+					closeBox();
+				}
+			});
+			// 浏览器自己的 Esc 关闭也接过来,走同一个缩回去的动画
+			box.addEventListener('cancel', (e) => {
+				e.preventDefault();
+				closeBox();
 			});
 
 			// 点图片和按钮以外的空白处关闭
 			box.addEventListener('click', (e) => {
 				const t = e.target as HTMLElement;
-				if (t === box || t.tagName === 'FIGURE' || t.tagName === 'FIGCAPTION') box.close();
+				if (t === box || t.tagName === 'FIGURE' || t.tagName === 'FIGCAPTION') closeBox();
 			});
 
 			// 手机上左右滑动切换
@@ -484,9 +571,14 @@ let flatIndex = 0;
 	#lightbox::backdrop {
 		background: rgba(13, 11, 18, 0.93);
 	}
-	/* 打开时从小圆"展开"成大图的弹出感 */
-	#lightbox[open] figure {
+	/* 不能用「圆长成大图」的时候(浏览器不支持 View Transition),退回原来的弹出感 */
+	#lightbox[open]:not(.morph) figure {
 		animation: lb-pop 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		#lightbox[open] figure {
+			animation: none;
+		}
 	}
 	@keyframes lb-pop {
 		from {
@@ -505,9 +597,13 @@ let flatIndex = 0;
 		gap: 0.9rem;
 		padding: 2.5rem 4.5rem;
 	}
+	/* 大图的框按原图比例(--ar,脚本从 data-w/h 算)直接算出来,不等图片下完——
+	   这样「圆长成大图」的终点一开始就是准的 */
 	#lb-img {
-		max-width: 100%;
-		max-height: calc(100dvh - 8rem);
+		--maxh: calc(100dvh - 8rem);
+		width: min(100%, calc(var(--maxh) * var(--ar, 1.5)));
+		height: auto;
+		aspect-ratio: var(--ar, 1.5);
 		object-fit: contain;
 		border-radius: 10px;
 	}
@@ -565,8 +661,8 @@ let flatIndex = 0;
 			padding: 1rem 0.8rem 4.5rem;
 		}
 		#lb-img {
+			--maxh: calc(100dvh - 7.5rem);
 			border-radius: 8px;
-			max-height: calc(100dvh - 7.5rem);
 		}
 		.lb-prev,
 		.lb-next {
@@ -587,5 +683,50 @@ let flatIndex = 0;
 	/* 灯箱打开时锁住页面滚动 */
 	body:has(#lightbox[open]) {
 		overflow: hidden;
+	}
+
+	/* 点开 / 关上那一下:圆形缩略图长成大图(0.46s)、关掉时缩回原位(0.38s)。
+	   框的位置大小由浏览器在两头之间补;圆角用 image-pair 上的 clip-path 从 50% 走到 10px(收回时反过来),
+	   用 clip-path 不用 overflow + border-radius:后者盖不住缩略图外圈的光晕,边上会漏一道细线;
+	   新旧两张都按 cover 填满框,中途交叉淡入淡出。整页(含深色底幕)跟着同样的时长淡入 / 淡出。 */
+	html[data-vt='photo-open']::view-transition-group(*),
+	html[data-vt='photo-open']::view-transition-old(*),
+	html[data-vt='photo-open']::view-transition-new(*) {
+		animation-duration: 0.46s;
+		animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+	}
+	html[data-vt='photo-close']::view-transition-group(*),
+	html[data-vt='photo-close']::view-transition-old(*),
+	html[data-vt='photo-close']::view-transition-new(*) {
+		animation-duration: 0.38s;
+		animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+	}
+	html[data-vt^='photo']::view-transition-old(photo),
+	html[data-vt^='photo']::view-transition-new(photo) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	html[data-vt='photo-open']::view-transition-image-pair(photo) {
+		animation: photo-round 0.46s cubic-bezier(0.32, 0.72, 0, 1) both;
+	}
+	html[data-vt='photo-close']::view-transition-image-pair(photo) {
+		animation: photo-unround 0.38s cubic-bezier(0.32, 0.72, 0, 1) both;
+	}
+	@keyframes photo-round {
+		from {
+			clip-path: inset(0 round 50%);
+		}
+		to {
+			clip-path: inset(0 round 10px);
+		}
+	}
+	@keyframes photo-unround {
+		from {
+			clip-path: inset(0 round 10px);
+		}
+		to {
+			clip-path: inset(0 round 50%);
+		}
 	}
 </style>

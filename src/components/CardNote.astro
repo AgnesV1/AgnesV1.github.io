@@ -35,7 +35,13 @@ const iso = d.toISOString();
 ---
 
 <li
-	class:list={['card', variant, `c${index % 5}`, 'collapsed']}
+	class:list={[
+		'card',
+		variant,
+		`c${index % 5}`,
+		card.data.tags.length > 0 && `t${tagColorIndex(card.data.tags[0])}`,
+		'collapsed',
+	]}
 	id={anchor}
 	data-lang={card.data.lang}
 	data-base={`card:${base}`}

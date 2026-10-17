@@ -1,6 +1,7 @@
 ---
 // 栏目引言诗：一词一色。每个单词按顺序轮换五色，但把颜色混向灰调压暗压淡，
 // 远看是一句安静的灰字，细看每个词才各有微微不同的色偏——克制版的彩虹。
+// 进场时每个词从模糊里浮出来（每词错开 70ms、各 0.7s，只放一次）；系统要求减少动态时直接显示。
 // 标点跟随所在单词，空格不占色号；多行用 lines 传入，行间自动 <br/>。
 type Props = { lines: string[] };
 
@@ -10,7 +11,7 @@ let wi = 0;
 const rendered = lines.map((line) =>
 	line.split(/(\s+)/).map((seg) => ({
 		seg,
-		ci: /\S/.test(seg) ? wi++ % 5 : -1,
+		i: /\S/.test(seg) ? wi++ : -1,
 	})),
 );
 ---
@@ -19,7 +20,7 @@ const rendered = lines.map((line) =>
 	rendered.map((parts, li) => (
 		<>
 			{li > 0 && <br />}
-			{parts.map(({ seg, ci }) => (ci >= 0 ? <span class={`w c${ci}`}>{seg}</span> : seg))}
+			{parts.map(({ seg, i }) => (i >= 0 ? <span class={`w c${i % 5}`} style={`--i:${i}`}>{seg}</span> : seg))}
 		</>
 	))
 }
@@ -27,5 +28,20 @@ const rendered = lines.map((line) =>
 <style>
 	.w {
 		color: color-mix(in srgb, var(--c) 45%, var(--tx-2));
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.w {
+			/* 位移要 inline-block 才生效；词与词之间的空格在 span 外面，照常换行 */
+			display: inline-block;
+			animation: verse-in 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+			animation-delay: calc(var(--i) * 70ms);
+		}
+	}
+	@keyframes verse-in {
+		from {
+			opacity: 0;
+			filter: blur(6px);
+			transform: translateY(4px);
+		}
 	}
 </style>
