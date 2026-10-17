@@ -1,0 +1,108 @@
+---
+// 读完的小彩蛋：滚到文末（转载声明那一行进入视野）时，从顶上五色进度线的尽头飞出一只小云雀——
+// 圆滚滚、头顶一撮冠毛、黑豆眼、杏黄小嘴、一点腮红，扑着翅膀往左下一沉、再往左上飞走，约 2.8 秒，每次打开页面只飞一次。
+// 平时什么都不挂：用 IntersectionObserver 盯着文末，飞的时候才临时放一个元素进来、飞完拿掉（el.animate 只动 transform / opacity）。
+// 只在进度线能显示的浏览器里飞（它是从线头出来的）；系统要求减少动态、页面在后台、还没往下滚过（比如一打开就在文末）时不飞。
+// 想换样子：改下面的 LARK（svg 朝右画，飞的时候整只镜像朝左）和 .read-lark 里的几个颜色变量。
+---
+
+<style is:global>
+	.read-lark {
+		--lb: #c9a27e;
+		--lw: #a9825f;
+		--lbe: #f3e3cf;
+		--lk: #3a2f2a;
+		position: fixed;
+		top: 3px;
+		right: 10px;
+		z-index: 47;
+		width: 46px;
+		pointer-events: none;
+	}
+	[data-theme='dark'] .read-lark {
+		--lb: #d2bb9d;
+		--lw: #b39a77;
+		--lbe: #f1e6d6;
+		--lk: #1d1a22;
+	}
+	.read-lark svg {
+		display: block;
+		width: 100%;
+		overflow: visible;
+		transform: scaleX(-1);
+	}
+	.read-lark .rl-body {
+		fill: var(--lb);
+	}
+	.read-lark .rl-belly {
+		fill: var(--lbe);
+	}
+	.read-lark .rl-wing {
+		fill: var(--lw);
+		transform-box: view-box;
+		transform-origin: 19px 12px;
+	}
+	.read-lark .rl-streak {
+		fill: none;
+		stroke: var(--lw);
+		stroke-width: 0.9;
+		stroke-linecap: round;
+	}
+	.read-lark .rl-beak {
+		fill: var(--sun);
+	}
+	.read-lark .rl-cheek {
+		fill: var(--coral);
+		opacity: 0.5;
+	}
+	.read-lark .rl-eye {
+		fill: var(--lk);
+	}
+	.read-lark .rl-glint {
+		fill: #fff;
+	}
+</style>
+
+<script>
+	const LARK = `<svg viewBox="0 0 34 26" aria-hidden="true"><path class="rl-body" d="M8 15.5 2.2 12.6 3.4 18.6Z"/><ellipse class="rl-body" cx="15.5" cy="15.5" rx="10" ry="8"/><circle class="rl-body" cx="21.5" cy="10.5" r="6"/><path class="rl-body" d="M19.6 5.4Q20.1 1.3 23.6 2.3Q21.7 3.3 21.9 5.2Z"/><ellipse class="rl-belly" cx="18" cy="18.3" rx="6.6" ry="4.3"/><path class="rl-streak" d="M12.4 15.4l1.6-1.1M15 17.3l1.6-1.1M10.8 18.2l1.4-.9"/><path class="rl-beak" d="M27 10.6 30.4 11.5 26.9 12.4Z"/><circle class="rl-cheek" cx="24.3" cy="13.1" r="1.5"/><circle class="rl-eye" cx="23.4" cy="9.9" r="1.2"/><circle class="rl-glint" cx="23.85" cy="9.45" r=".4"/><path class="rl-wing" d="M10 13.6Q14.6 5.4 20.6 12Q16 16.6 10 13.6Z"/></svg>`;
+
+	const fly = () => {
+		if (document.visibilityState !== 'visible') return;
+		const el = document.createElement('div');
+		el.className = 'read-lark';
+		el.setAttribute('aria-hidden', 'true');
+		el.innerHTML = LARK;
+		document.body.append(el);
+		const path = el.animate(
+			[
+				{ transform: 'translate(0, -10px) scale(0.5)', opacity: 0 },
+				{ transform: 'translate(-8px, 14px) scale(1)', opacity: 1, offset: 0.12 },
+				{ transform: 'translate(-16vw, 52px) rotate(-4deg)', opacity: 1, offset: 0.45 },
+				{ transform: 'translate(-30vw, 30px) rotate(8deg)', opacity: 1, offset: 0.75 },
+				{ transform: 'translate(-42vw, -70px) scale(0.85) rotate(16deg)', opacity: 0 },
+			],
+			{ duration: 2800, easing: 'cubic-bezier(0.4, 0.1, 0.3, 1)', fill: 'forwards' },
+		);
+		el.querySelector('.rl-wing')?.animate(
+			[{ transform: 'rotate(0)' }, { transform: 'rotate(-38deg) scaleY(0.8)' }, { transform: 'rotate(0)' }],
+			{ duration: 240, iterations: 11 },
+		);
+		path.finished.then(() => el.remove());
+	};
+
+	const end = document.querySelector('article .colophon');
+	if (
+		end &&
+		CSS.supports('animation-timeline: scroll()') &&
+		!matchMedia('(prefers-reduced-motion: reduce)').matches
+	) {
+		let scrolled = false;
+		addEventListener('scroll', () => (scrolled = true), { once: true, passive: true });
+		const io = new IntersectionObserver(([entry]) => {
+			if (!entry.isIntersecting || !scrolled) return;
+			io.disconnect();
+			fly();
+		});
+		io.observe(end);
+	}
+</script>

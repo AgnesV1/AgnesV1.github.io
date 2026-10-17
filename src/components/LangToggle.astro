@@ -39,6 +39,8 @@
 </style>
 
 <script>
+	import { canMorph } from '../lib/morph';
+
 	const btn = document.getElementById('lang-toggle');
 	btn?.addEventListener('click', () => {
 		const html = document.documentElement;
@@ -50,7 +52,15 @@
 			location.href = translation;
 			return;
 		}
-		html.dataset.lang = next;
-		document.dispatchEvent(new CustomEvent('langchange'));
+		const flip = () => {
+			html.dataset.lang = next;
+			document.dispatchEvent(new CustomEvent('langchange'));
+		};
+		// 换语言时整页约 0.3 秒交叉淡过去（快慢在 global.css 的「点一下的过场」）；不能放时直接换
+		if (!canMorph()) return flip();
+		html.dataset.vt = 'lang';
+		document.startViewTransition(flip).finished.finally(() => {
+			if (html.dataset.vt === 'lang') delete html.dataset.vt;
+		});
 	});
 </script>

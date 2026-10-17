@@ -335,6 +335,48 @@ html[data-vt='theme']::view-transition-new(orb) {
 	}
 }
 
+/* ===== 点一下的过场（src/lib/morph.ts）=====
+   都是同文档 View Transition，只在点的那一下动，平时零开销；<html data-vt> 只在过场期间存在。
+   list = 筛选时列表重排；card = 短札便签长开 / 缩回；zoom-open / zoom-close = 文章里的图放大 / 缩回；lang = 换语言整页交叉淡化。
+   曲线和相册灯箱同一条 cubic-bezier(.32,.72,0,1)。 */
+html[data-vt='list']::view-transition-group(*),
+html[data-vt='list']::view-transition-old(*),
+html[data-vt='list']::view-transition-new(*),
+html[data-vt='card']::view-transition-group(*),
+html[data-vt='card']::view-transition-old(*),
+html[data-vt='card']::view-transition-new(*) {
+	animation-duration: 0.42s;
+	animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+html[data-vt='zoom-open']::view-transition-group(*),
+html[data-vt='zoom-open']::view-transition-old(*),
+html[data-vt='zoom-open']::view-transition-new(*) {
+	animation-duration: 0.46s;
+	animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+html[data-vt='zoom-close']::view-transition-group(*),
+html[data-vt='zoom-close']::view-transition-old(*),
+html[data-vt='zoom-close']::view-transition-new(*) {
+	animation-duration: 0.38s;
+	animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+html[data-vt='lang']::view-transition-old(root),
+html[data-vt='lang']::view-transition-new(root) {
+	animation-duration: 0.32s;
+	animation-timing-function: ease;
+}
+/* 便签长开时字不跟着拉伸：新旧两张都按原大小贴左上角，框长多大就露多少 */
+::view-transition-group(*.card) {
+	overflow: clip;
+}
+::view-transition-old(*.card),
+::view-transition-new(*.card) {
+	width: 100%;
+	height: 100%;
+	object-fit: none;
+	object-position: 0 0;
+}
+
 /* ===== 栏目引言诗句 =====
    比页头站名明显小一号、颜色淡。词级微彩由 Verse.astro 负责（一词一色的克制版），
    这里只管字形；直接写纯文本时就是安静的灰字 */

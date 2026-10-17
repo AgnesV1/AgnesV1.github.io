@@ -256,8 +256,11 @@ const iso = d.toISOString();
 </style>
 
 <script>
+	import { morphGroup } from '../lib/morph';
+
 	// 展开/收起：点卡片切换，点其他区域收起，同时只展开一张。
 	// 组件脚本全页只跑一次，统一管理页面上所有短札卡。
+	// 点的那一下有过场：便签从一行长开 / 缩回，同一列表里其他条目滑着让位（lib/morph.ts）；直链 #c-xxx 打开时不放。
 	const cards = [...document.querySelectorAll<HTMLLIElement>('li.card')];
 	if (cards.length > 0) {
 		let openCard: HTMLLIElement | null = null;
@@ -281,6 +284,14 @@ const iso = d.toISOString();
 			el.tabIndex = 0;
 		});
 
+		const neighbours = (...els: (HTMLLIElement | null)[]) => [
+			...new Set(els.flatMap((el) => (el?.parentElement ? [...el.parentElement.children] : [])) as HTMLElement[]),
+		];
+		const animated = (update: () => void, ...els: (HTMLLIElement | null)[]) =>
+			morphGroup('card', neighbours(...els), update, (li) => (li.matches('.card') ? 'card' : undefined));
+		const toggleCard = (card: HTMLLIElement) =>
+			animated(() => (card.classList.contains('collapsed') ? expand(card) : collapse(card)), card, openCard);
+
 		document.addEventListener('click', (e) => {
 			const sel = document.getSelection();
 			if (sel && !sel.isCollapsed) return; // 用户在拖选文字，不当作点击
@@ -289,9 +300,10 @@ const iso = d.toISOString();
 			if (card) {
 				// 卡内链接和星尘各自响应，不触发开合
 				if (t.closest('a, hidden-text')) return;
-				card.classList.contains('collapsed') ? expand(card) : collapse(card);
+				toggleCard(card);
 			} else if (openCard) {
-				collapse(openCard);
+				const el = openCard;
+				animated(() => collapse(el), el);
 			}
 		});
 
@@ -299,8 +311,7 @@ const iso = d.toISOString();
 			const t = e.target as HTMLElement;
 			if ((e.key === 'Enter' || e.key === ' ') && t.matches?.('li.card')) {
 				e.preventDefault();
-				const card = t as HTMLLIElement;
-				card.classList.contains('collapsed') ? expand(card) : collapse(card);
+				toggleCard(t as HTMLLIElement);
 			}
 		});
 

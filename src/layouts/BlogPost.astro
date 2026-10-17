@@ -2,11 +2,13 @@
 import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
+import FigureZoom from '../components/FigureZoom.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 import HiddenText from '../components/HiddenText.astro';
 import NoteTimeline from '../components/NoteTimeline.astro';
+import ReadLark from '../components/ReadLark.astro';
 import Toc from '../components/Toc.astro';
 import { tagColorIndex } from '../lib/tag-color';
 
@@ -152,6 +154,9 @@ const tone = tags.length > 0 ? `t${tagColorIndex(tags[0])}` : undefined;
 		</div>
 		<Footer />
 		<HiddenText />
+		<!-- 文章里的图点开放大；读到文末时从进度线尽头飞出一只小云雀 -->
+		<FigureZoom />
+		<ReadLark />
 	</body>
 </html>
 

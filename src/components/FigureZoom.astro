@@ -1,0 +1,148 @@
+---
+// 文章里的图点开放大：示意图（Fig.astro 的内嵌 svg）、截图（Shot.astro）、Markdown 图片都行（链接里的图除外）。
+// 点的那一下，图从原位长成大图（0.46s），点哪儿 / Esc 缩回原位（0.38s），曲线和相册灯箱同一条（lib/morph.ts）。
+// 大图放在一张和页面同色的卡片上（示意图是透明底、跟着日夜变色，放在深色底上会看不清），外面一层半透明暗幕。
+// 截图放大时用 srcset 里最大的那张；最多等 0.3s 解码。挂在 BlogPost 布局里，blog 和 writing 都有。
+---
+
+<dialog id="fig-zoom" aria-label="查看大图 View figure">
+	<div class="fz-card"></div>
+</dialog>
+
+<style>
+	#fig-zoom {
+		border: 0;
+		padding: 0;
+		margin: 0;
+		width: 100vw;
+		height: 100dvh;
+		max-width: 100vw;
+		max-height: 100dvh;
+		background: transparent;
+		cursor: zoom-out;
+	}
+	#fig-zoom[open] {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	#fig-zoom::backdrop {
+		background: rgba(13, 11, 18, 0.55);
+	}
+	.fz-card {
+		max-width: calc(100vw - 2rem);
+		max-height: calc(100dvh - 2rem);
+		overflow: auto;
+		padding: clamp(0.6rem, 2vw, 1.4rem);
+		border-radius: 14px;
+		background: var(--bg);
+	}
+	.fz-card :global(.fz-svg) {
+		display: block;
+		width: min(calc(100vw - 4rem), 64rem);
+		height: auto;
+		max-height: calc(100dvh - 5rem);
+	}
+	.fz-card :global(.fz-img) {
+		display: block;
+		width: min(calc(100vw - 4rem), calc((100dvh - 5rem) * var(--ar, 1.6)), 90rem);
+		height: auto;
+		aspect-ratio: var(--ar, 1.6);
+		border-radius: 10px;
+		border: 1px solid var(--line);
+	}
+</style>
+
+<style is:global>
+	.prose .fig-wrap svg,
+	.prose .shot img,
+	.prose p > img {
+		cursor: zoom-in;
+	}
+	body:has(#fig-zoom[open]) {
+		overflow: hidden;
+	}
+</style>
+
+<script>
+	import { morphOne } from '../lib/morph';
+
+	const box = document.getElementById('fig-zoom') as HTMLDialogElement | null;
+	const card = box?.querySelector<HTMLElement>('.fz-card');
+	const ZOOMABLE = '.prose .fig-wrap svg, .prose .shot img, .prose p > img';
+
+	if (box && card) {
+		let source: Element | null = null;
+		let closing = false;
+
+		// srcset 里挑最宽的那张，放大了也清楚
+		const biggest = (img: HTMLImageElement) => {
+			let best = img.currentSrc || img.src;
+			let w = 0;
+			for (const part of img.srcset.split(',')) {
+				const [url, d] = part.trim().split(/\s+/);
+				const n = parseFloat(d);
+				if (url && d?.endsWith('w') && n > w) [best, w] = [url, n];
+			}
+			return best;
+		};
+
+		// 把要放大的东西放进卡片；截图返回新 img，好等它解码
+		const fill = (el: Element): HTMLImageElement | undefined => {
+			card.replaceChildren();
+			if (el instanceof SVGSVGElement) {
+				const svg = el.cloneNode(true) as SVGSVGElement;
+				svg.classList.add('fz-svg');
+				card.append(svg);
+				return;
+			}
+			const img = el as HTMLImageElement;
+			const big = new Image();
+			big.className = 'fz-img';
+			big.alt = img.alt;
+			big.style.setProperty('--ar', String(img.naturalWidth / img.naturalHeight || 1.6));
+			big.src = biggest(img);
+			card.append(big);
+			return big;
+		};
+		const ready = (img?: HTMLImageElement) =>
+			img && Promise.race([img.decode().catch(() => {}), new Promise((r) => setTimeout(r, 300))]);
+
+		document.addEventListener('click', (e) => {
+			const el = (e.target as Element).closest?.(ZOOMABLE);
+			if (!el || el.closest('a') || box.open) return;
+			source = el;
+			morphOne(
+				'zoom-open',
+				'fig-zoom',
+				() => el,
+				() => card.firstElementChild,
+				async () => {
+					const big = fill(el);
+					box.showModal();
+					await ready(big);
+				},
+			);
+		});
+
+		const close = () => {
+			if (!box.open || closing) return;
+			closing = true;
+			morphOne(
+				'zoom-close',
+				'fig-zoom',
+				() => card.firstElementChild,
+				() => source,
+				() => box.close(),
+			).finally(() => {
+				closing = false;
+				card.replaceChildren();
+			});
+		};
+		box.addEventListener('click', close);
+		box.addEventListener('cancel', (e) => {
+			e.preventDefault();
+			close();
+		});
+	}
+</script>

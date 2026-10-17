@@ -29,6 +29,7 @@ const letters = [...titleEn];
 				<HeaderLink href="/writing"><span class="only-zh">夜莺颂</span><span class="only-en">Fiction</span></HeaderLink>
 				<HeaderLink href="/photos"><span class="only-zh">镜花水月</span><span class="only-en">Photos</span></HeaderLink>
 				<HeaderLink href="/about">About</HeaderLink>
+				<span class="nav-bar" aria-hidden="true"></span>
 			</div>
 			<div class="social">
 				{
@@ -204,6 +205,44 @@ const letters = [...titleEn];
 		margin-left: auto;
 		white-space: nowrap;
 	}
+	/* 栏目下面那一道线会滑：脚本给 .links 加上 .sliding 后，各个链接自己的下划线藏起来，
+	   换成同一道 .nav-bar——停在当前栏目时是珊瑚色，鼠标移到别的栏目就滑过去、变薄荷色，移开再滑回来。
+	   没有当前栏目的页面（文章页、404）平时不显示，鼠标移上来才出现。只在宽屏（页头一行排开时）用；
+	   没有脚本或系统要求减少动态时是原来的样子 / 直接跳。 */
+	.links {
+		position: relative;
+	}
+	.nav-bar {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 0;
+		height: 2px;
+		opacity: 0;
+		pointer-events: none;
+		background: var(--coral);
+		transition:
+			transform 0.34s cubic-bezier(0.32, 0.72, 0, 1),
+			width 0.34s cubic-bezier(0.32, 0.72, 0, 1),
+			background-color 0.25s ease,
+			opacity 0.2s ease;
+	}
+	.nav-bar.away {
+		background: var(--mint);
+	}
+	.links.sliding .nav-bar.show {
+		opacity: 1;
+	}
+	.links.sliding :global(a),
+	.links.sliding :global(a:hover),
+	.links.sliding :global(a.active) {
+		border-bottom-color: transparent;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.nav-bar {
+			transition: none;
+		}
+	}
 	.social {
 		display: flex;
 		align-items: center;
@@ -293,6 +332,9 @@ const letters = [...titleEn];
 			gap: 0.35rem;
 			margin-left: 0;
 		}
+		.nav-bar {
+			display: none;
+		}
 		/* 面板里的链接加大，方便手指点按 */
 		.links :global(a) {
 			font-size: 1.05rem;
@@ -336,6 +378,41 @@ const letters = [...titleEn];
 		flapLogo.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && flap());
 		flapLogo.addEventListener('focus', () => flapLogo.matches(':focus-visible') && flap());
 		lastLetter.addEventListener('animationend', () => flapLogo.classList.remove('flapping'));
+	}
+
+	// 栏目下划线滑动：只在宽屏、页头一行排开时启用；换语言（栏目名变长变短）、窗口变宽窄、字体到位时重新量
+	const links = document.querySelector<HTMLElement>('header .links');
+	const navBar = links?.querySelector<HTMLElement>('.nav-bar');
+	if (links && navBar) {
+		const wide = matchMedia('(min-width: 641px)');
+		const anchors = [...links.querySelectorAll<HTMLAnchorElement>('a')];
+		const current = () => anchors.find((a) => a.classList.contains('active')) ?? null;
+		const place = (a: HTMLAnchorElement | null, instant = false) => {
+			// 原本藏着（没有当前栏目的页面）时，先就位再淡出来，不从左边滑过来
+			const jump = instant || !navBar.classList.contains('show');
+			if (jump) navBar.style.transition = instant ? 'none' : 'opacity 0.2s ease';
+			if (a) {
+				navBar.style.width = `${a.offsetWidth}px`;
+				navBar.style.transform = `translate(${a.offsetLeft}px, ${a.offsetTop + a.offsetHeight - 2}px)`;
+			}
+			navBar.classList.toggle('show', !!a);
+			navBar.classList.toggle('away', !!a && a !== current());
+			if (jump) {
+				void navBar.offsetWidth;
+				navBar.style.transition = '';
+			}
+		};
+		const setup = () => {
+			links.classList.toggle('sliding', wide.matches);
+			if (wide.matches) place(current(), true);
+		};
+		anchors.forEach((a) => a.addEventListener('pointerenter', () => wide.matches && place(a)));
+		links.addEventListener('pointerleave', () => wide.matches && place(current()));
+		wide.addEventListener('change', setup);
+		document.addEventListener('langchange', setup);
+		addEventListener('resize', setup);
+		document.fonts?.ready.then(setup);
+		setup();
 	}
 
 	// 页头字标滚出视口 → 迷你页头滑入顶端；滚回来 → 迷你页头退场

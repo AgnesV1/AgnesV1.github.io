@@ -140,6 +140,8 @@ const showYears = years.length > 1;
 </style>
 
 <script>
+	import { morphGroup } from '../lib/morph';
+
 	const bar = document.querySelector<HTMLElement>('.filterbar');
 	// 一页可能有多个列表容器（如 /writing 的长篇列表 + 短札墙），筛选同时作用于全部
 	const lists = [...document.querySelectorAll<HTMLElement>('.post-list, .cards-wall')];
@@ -196,16 +198,20 @@ const showYears = years.length > 1;
 			updateEmpty();
 		};
 
+		// 点筛选时列表重新排队：筛掉的淡出、留下的滑到新位置、新出现的淡入（lib/morph.ts，只在点的那一下动）
+		const items = () => lists.flatMap((list) => [...list.querySelectorAll<HTMLLIElement>(':scope > li')]);
+		const resync = () => morphGroup('list', items(), sync, (li) => (li.matches('.card') ? 'card' : undefined));
+
 		const toggle = (set: Set<string>, value: string) => {
 			set.has(value) ? set.delete(value) : set.add(value);
-			sync();
+			resync();
 		};
 		tagBtns.forEach((b) => b.addEventListener('click', () => toggle(activeTags, b.dataset.tag || '')));
 		yearBtns.forEach((b) => b.addEventListener('click', () => toggle(activeYears, b.dataset.year || '')));
 		clearBtn?.addEventListener('click', () => {
 			activeTags.clear();
 			activeYears.clear();
-			sync();
+			resync();
 		});
 		document.addEventListener('langchange', updateEmpty);
 		sync();
