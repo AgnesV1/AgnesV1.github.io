@@ -53,6 +53,52 @@ const { title, description, image = '/og.png' } = Astro.props;
 		document.documentElement.dataset.theme = theme;
 		document.documentElement.dataset.lang = lang;
 	})();
+
+	// 天色跟着钟点（global.css 的「全站底图」拿去画，比苦昼短淡一档）：
+	// 白天早上偏暖（杏、浅玫瑰）、白天是平常那抹淡蓝、傍晚偏薰衣草和粉、六点前地平线一点杏黄；
+	// 夜里刚入夜带紫、地平线一抹玫瑰，后半夜最深（只剩星云），天亮前顶上泛蓝、地平线泛青。
+	// 每张表一行 = [钟点, 天顶颜色, 地平线颜色]（rgba），关键时刻之间按钟点线性过渡。白天夜里两套都算好写在 <html> 上，
+	// 点日月换了白天 / 夜里也不用重算：白天那套在夜里的钟点用正午的天，夜里那套在白天的钟点用凌晨一点的天。
+	// Sky.astro 每 5 分钟、回到前台时再调一次 __skyTint。改颜色就改 D / N 两张表。
+	(() => {
+		const D = [
+			[6, [240, 170, 120, 0.16], [240, 150, 150, 0.1]],
+			[8.5, [31, 135, 181, 0.11], [240, 150, 150, 0]],
+			[15, [31, 135, 181, 0.11], [240, 150, 170, 0]],
+			[17, [140, 120, 220, 0.11], [240, 150, 170, 0.1]],
+			[18, [230, 140, 160, 0.14], [245, 180, 120, 0.12]],
+		];
+		const N = [
+			[18, [150, 110, 230, 0.16], [230, 110, 150, 0.12]],
+			[20, [140, 120, 230, 0.09], [176, 162, 255, 0.05]],
+			[23, [140, 120, 230, 0], [176, 162, 255, 0]],
+			[27, [70, 120, 200, 0], [78, 217, 173, 0]],
+			[29, [70, 120, 200, 0.07], [78, 217, 173, 0.08]],
+			[30, [90, 150, 220, 0.12], [110, 220, 200, 0.13]],
+		];
+		const along = (K, h) => {
+			let i = 0;
+			while (i < K.length - 2 && h > K[i + 1][0]) i++;
+			const a = K[i];
+			const b = K[i + 1];
+			const t = Math.min(1, Math.max(0, (h - a[0]) / (b[0] - a[0])));
+			return [1, 2].map(
+				(j) => `rgba(${a[j].map((v, k) => (k < 3 ? Math.round(v + (b[j][k] - v) * t) : (v + (b[j][k] - v) * t).toFixed(3))).join(',')})`,
+			);
+		};
+		window.__skyTint = () => {
+			const now = new Date();
+			const h = now.getHours() + now.getMinutes() / 60;
+			const [dTop, dHor] = along(D, h >= 6 && h < 18 ? h : 12);
+			const [nTop, nHor] = along(N, h >= 18 ? h : h < 6 ? h + 24 : 25);
+			const s = document.documentElement.style;
+			s.setProperty('--sky-top', dTop);
+			s.setProperty('--sky-hor', dHor);
+			s.setProperty('--sky-top-n', nTop);
+			s.setProperty('--sky-hor-n', nHor);
+		};
+		window.__skyTint();
+	})();
 </script>
 
 <Font cssVariable="--font-display" preload />

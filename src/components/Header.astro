@@ -410,6 +410,34 @@ const letters = [...titleEn];
 		links.addEventListener('pointerleave', () => wide.matches && place(current()));
 		wide.addEventListener('change', setup);
 		document.addEventListener('langchange', setup);
+
+		// 换语言时，三个栏目名先乱一下再落成新名字（约 0.4 秒，从左往右一个字一个字定下来），页面其余部分照常交叉淡化。
+		// 落成中文时乱的是本站自己的字（云雀、夜莺、镜花水月……），落成英文时是小写字母——字宽和目标差不多，导航不乱跳。
+		// 只有栏目名这样；减少动态时不乱。临时用一个 setInterval，放完就清掉。
+		const ZH = '云雀夜莺颂镜花水月荒腔走板星尘风铃天光梦诗';
+		const EN = 'abcdefghijklmnopqrstuvwxyz';
+		const scramble = () => {
+			if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+			const lang = document.documentElement.dataset.lang === 'en' ? 'en' : 'zh';
+			const pool = lang === 'zh' ? ZH : EN;
+			links.querySelectorAll<HTMLElement>(`a .only-${lang}`).forEach((el) => {
+				const to = (el.dataset.label ??= el.textContent ?? '');
+				const chars = [...to];
+				let step = 0;
+				const id = setInterval(() => {
+					step++;
+					const keep = Math.floor((chars.length * step) / 9);
+					el.textContent =
+						chars.slice(0, keep).join('') + chars.slice(keep).map(() => pool[Math.floor(Math.random() * pool.length)]).join('');
+					if (step >= 9) {
+						clearInterval(id);
+						el.textContent = to;
+						if (wide.matches) place(current(), true);
+					}
+				}, 42);
+			});
+		};
+		document.addEventListener('langchange', scramble);
 		addEventListener('resize', setup);
 		document.fonts?.ready.then(setup);
 		setup();

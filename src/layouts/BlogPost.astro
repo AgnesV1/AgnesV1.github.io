@@ -8,7 +8,7 @@ import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 import HiddenText from '../components/HiddenText.astro';
 import NoteTimeline from '../components/NoteTimeline.astro';
-import ReadLark from '../components/ReadLark.astro';
+import ReadChime from '../components/ReadChime.astro';
 import Toc from '../components/Toc.astro';
 import { tagColorIndex } from '../lib/tag-color';
 
@@ -154,9 +154,9 @@ const tone = tags.length > 0 ? `t${tagColorIndex(tags[0])}` : undefined;
 		</div>
 		<Footer />
 		<HiddenText />
-		<!-- 文章里的图点开放大；读到文末时从进度线尽头飞出一只小云雀 -->
+		<!-- 文章里的图点开放大；读到文末时右上角飘进来一只风铃 -->
 		<FigureZoom />
-		<ReadLark />
+		<ReadChime />
 	</body>
 </html>
 

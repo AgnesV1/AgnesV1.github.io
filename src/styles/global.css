@@ -121,13 +121,13 @@ body::after {
 	pointer-events: none;
 }
 
-/* --- 日间：顶部一抹天色，三朵水彩云（白色高光 + 向下错开的淡蓝云影） --- */
+/* --- 日间：顶部一抹天色、底边一点地平线的光，三朵水彩云（白色高光 + 向下错开的淡蓝云影） ---
+   天色和地平线的颜色跟着钟点走（--sky-top / --sky-hor，BaseHead.astro 开头的脚本算好写在 <html> 上），
+   括号里的是没有脚本时的样子（平常那抹淡蓝、没有地平线的光） */
 body::before {
-	background-image: linear-gradient(
-		180deg,
-		color-mix(in srgb, var(--sky) 11%, transparent),
-		transparent 24rem
-	);
+	background-image:
+		linear-gradient(180deg, var(--sky-top, color-mix(in srgb, var(--sky) 11%, transparent)), transparent 24rem),
+		linear-gradient(0deg, var(--sky-hor, transparent), transparent 16rem);
 }
 body::after {
 	inset: 0 -4rem; /* 左右加宽，漂移时不露边 */
@@ -149,8 +149,11 @@ body::after {
 }
 
 /* --- 夜间：角落星云 + 三组错开周期平铺的细星（平铺周期互不相同，看不出重复） --- */
+/* 最前面两层是跟着钟点走的天色（--sky-top-n / --sky-hor-n）：刚入夜带紫、后半夜透明、天亮前泛青 */
 [data-theme='dark'] body::before {
 	background-image:
+		linear-gradient(180deg, var(--sky-top-n, transparent), transparent 26rem),
+		linear-gradient(0deg, var(--sky-hor-n, transparent), transparent 18rem),
 		radial-gradient(44rem 30rem at 85% 8%, color-mix(in srgb, var(--lav) 13%, transparent), transparent 70%),
 		radial-gradient(38rem 26rem at 6% 82%, color-mix(in srgb, var(--sky) 9%, transparent), transparent 70%),
 		radial-gradient(1px 1px at 8% 12%, rgba(255, 255, 255, 0.35) 50%, transparent 51%),
@@ -171,6 +174,8 @@ body::after {
 	background-repeat:
 		no-repeat,
 		no-repeat,
+		no-repeat,
+		no-repeat,
 		repeat,
 		repeat,
 		repeat,
@@ -187,6 +192,8 @@ body::after {
 		repeat,
 		repeat;
 	background-size:
+		auto,
+		auto,
 		auto,
 		auto,
 		620px 740px,

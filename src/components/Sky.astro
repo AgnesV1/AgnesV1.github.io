@@ -3,8 +3,10 @@
 //   飞机，3–5 分钟一趟：日间是高空的一个小点拖两道长尾迹；夜间是红眼航班——一闪一闪的红灯加一颗小白灯
 //   潮水，6–10 分钟一次：又宽又矮的一片水贴着底边从右下角斜着滑进来、再退回去，一次两道；夜间是荧光海
 //   少见的那样，10–15 分钟一次：日间按季节飘东西（3–4 月嫩叶、5–8 月康乃馨、9–11 月枫叶、12–2 月雪花，有风时一两片会打个小旋）；夜间一阵流星雨
-// 一次只放一样：轮到时还有东西没走完，就等它走完再隔一分钟。
+// 各管各的（2026-10-17 她说要随机性，和苦昼短一样）：三样按自己的节奏排，撞上了就一起出现，不再一次只放一样。
+// 博客只放这三样，不加苦昼短的彩虹和极光（太霓虹）。
 // 平时只挂一个定时器，没有常驻的动画；东西只动 transform / opacity，放完就拿掉。
+// 另外每 5 分钟（和回到前台时）让 BaseHead.astro 里的 __skyTint 重算一次天色，跟着钟点慢慢变。
 // 页面在后台、系统要求减少动态时不放。这一层和底图的两层同在最底下（z-index: -1），夹在静态层和云 / 亮星之间，从文字后面过。
 ---
 
@@ -113,8 +115,7 @@
 	// ---------- 排班 ----------
 	type Kind = 'plane' | 'tide' | 'rare';
 	const GAPS: Record<Kind, number[]> = { plane: [180, 300], tide: [360, 600], rare: [600, 900] }; // 两趟之间隔多久（秒）
-	const QUIET = 60;
-	const ORDER: Kind[] = ['rare', 'tide', 'plane']; // 几样同时到点：少见的先放
+	const ORDER: Kind[] = ['rare', 'tide', 'plane'];
 	const between = (range: number[]) => pick(range) * 1000;
 	// 刚打开时第一趟飞机、第一道潮水来得早一点：看一两分钟就走的人也见得到
 	const due: Record<Kind, number> = {
@@ -122,7 +123,6 @@
 		tide: Date.now() + between([60, 180]),
 		rare: Date.now() + between(GAPS.rare),
 	};
-	let clearAt = 0; // 上一样什么时候走完
 	let timer = 0;
 	let serial = 0;
 
@@ -416,7 +416,7 @@
 		tide: (how) => tide(how ? how === 'night' : night()),
 	};
 	function show(kind: string, how?: string) {
-		clearAt = Date.now() + SHOWS[kind](how);
+		SHOWS[kind](how);
 	}
 
 	const arm = (ms: number) => {
@@ -425,27 +425,32 @@
 	};
 	const next = () => Math.min(due.plane, due.tide, due.rare) - Date.now();
 
+	// 到点了的全放（撞在一起就一起出现），各自排到下一趟
 	function tick() {
 		if (!allowed()) return; // 回到前台时再排（下面的 visibilitychange）；减少动态的就一直不放
 		const now = Date.now();
-		const kind = ORDER.find((k) => due[k] <= now);
-		if (!kind) return arm(next());
-		const free = clearAt ? clearAt + QUIET * 1000 : 0;
-		if (now < free) return arm(free - now); // 上一样还没走完，或刚走完不到一分钟：先等
-		due[kind] = now + between(GAPS[kind]);
-		show(kind === 'tide' ? 'tide' : kind === 'plane' ? (night() ? 'redeye' : 'plane') : night() ? 'meteors' : 'fall');
+		for (const kind of ORDER.filter((k) => due[k] <= now)) {
+			due[kind] = now + between(GAPS[kind]);
+			show(kind === 'tide' ? 'tide' : kind === 'plane' ? (night() ? 'redeye' : 'plane') : night() ? 'meteors' : 'fall');
+		}
 		arm(next());
 	}
+
+	// 天色跟着钟点慢慢变：每 5 分钟、回到前台时重算一次（算法在 BaseHead.astro 开头）
+	const retint = () => (window as unknown as { __skyTint?: () => void }).__skyTint?.();
+	setInterval(() => document.visibilityState === 'visible' && retint(), 5 * 60 * 1000);
 
 	if (host) {
 		document.addEventListener('visibilitychange', () => {
 			if (document.visibilityState !== 'visible') clearTimeout(timer); // 在后台：定时器也不挂
-			else arm(next());
+			else {
+				retint();
+				arm(next());
+			}
 		});
 		// 换了日夜：正在放的那样直接拿掉（日间的飞机不该飞进夜里）
 		new MutationObserver(() => {
 			host.querySelectorAll('.sky-ev').forEach((el) => el.remove());
-			if (clearAt > Date.now()) clearAt = Date.now();
 		}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 		// 预览时手动放一样看样子，在控制台里：
 		//   dispatchEvent(new CustomEvent('sky-show', { detail: 'plane' }))        plane / redeye / meteors / fall / tide
